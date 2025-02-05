@@ -85,11 +85,17 @@ public class AppConfig implements WebMvcConfigurer {
                     }
                 }))
                 .addPathPatterns("/api/**", "/openapi/**")
-                .excludePathPatterns("/api/login", "/api/ldap/ldapEnableStatus", "/download/**", "/druid/**");
+                .excludePathPatterns(
+                        "/api/login",
+                        "/api/sysConfig/getNeededCfg",
+                        "/api/sysConfig/setInitConfig",
+                        "/download/**",
+                        "/druid/**",
+                        "/api/version");
 
         registry.addInterceptor(new TenantInterceptor())
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/login", "/api/ldap/ldapEnableStatus")
+                .excludePathPatterns("/api/login", "/api/sysConfig/getNeededCfg", "/api/sysConfig/setInitConfig")
                 .addPathPatterns("/api/alertGroup/**")
                 .addPathPatterns("/api/alertHistory/**")
                 .addPathPatterns("/api/alertInstance/**")
@@ -107,6 +113,7 @@ public class AppConfig implements WebMvcConfigurer {
                 .addPathPatterns("/api/role/**")
                 .addPathPatterns("/api/fragment/**")
                 .addPathPatterns("/api/git/**")
-                .addPathPatterns("/api/jar/*");
+                .addPathPatterns("/api/jar/*")
+                .addPathPatterns("/api/approval/*");
     }
 }

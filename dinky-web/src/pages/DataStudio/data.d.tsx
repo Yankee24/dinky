@@ -17,40 +17,48 @@
  *
  */
 
-export type StudioParam = {
-  useSession: boolean;
-  session: string;
-  useRemote?: boolean;
-  clusterId?: number;
-  useResult: boolean;
-  maxRowNum?: number;
-  statement: string;
-  fragment?: boolean;
-  jobName?: string;
-  parallelism?: number;
-  checkPoint?: number;
-  savePointPath?: string;
+import { ContextMenuPosition } from '@/types/Public/state';
+
+import { DataStudioState } from '@/pages/DataStudio/model';
+
+export type ToolbarSelect = {
+  // 当前选中的tab
+  currentSelect?: string;
+  // 所有打开的tab
+  allOpenTabs: string[];
+  allTabs: string[];
 };
 
-export enum LeftMenuKey {
-  PROJECT_KEY = 'menu.datastudio.project',
-  CATALOG_KEY = 'menu.datastudio.catalog',
-  DATASOURCE_KEY = 'menu.datastudio.datasource',
-  FRAGMENT_KEY = 'menu.registration.fragment'
-}
-export enum RightMenuKey {
-  JOB_CONFIG_KEY = 'menu.datastudio.jobConfig',
-  PREVIEW_CONFIG_KEY = 'menu.datastudio.previewConfig',
-  SAVEPOINT_KEY = 'menu.datastudio.savePoint',
-  HISTORY_VISION_KEY = 'menu.datastudio.historyVision',
-  JOB_INFO_KEY = 'menu.datastudio.jobInfo'
-}
+// 没必要持久化
+// 右键状态
+export type RightContextMenuState = {
+  show: boolean;
+  position: ContextMenuPosition;
+};
 
-export enum LeftBottomKey {
-  CONSOLE_KEY = 'menu.datastudio.console',
-  RESULT_KEY = 'menu.datastudio.result',
-  LINEAGE_KEY = 'menu.datastudio.lineage',
-  HISTORY_KEY = 'menu.datastudio.history',
-  TABLE_DATA_KEY = 'menu.datastudio.table-data',
-  TOOLS_KEY = 'menu.datastudio.tool'
+export type RightMenuItemProps = {
+  dataStudioState: DataStudioState;
+};
+
+export enum DataStudioActionType {
+  // project
+  PROJECT_COLLAPSE_ALL = 'project-collapse-all',
+  PROJECT_EXPAND_ALL = 'project-expand-all',
+  PROJECT_CREATE_ROOT_DIR = 'project-create-root-dir',
+  PROJECT_RIGHT_CLICK = 'project-right-click',
+  PROJECT_REFRESH = 'project-refresh',
+  DATASOURCE_REFRESH = 'datasource-refresh',
+  DATASOURCE_CREATE = 'datasource-create',
+  CATALOG_REFRESH = 'catalog-refresh',
+  TASK_RUN_CHECK = 'task-run-check',
+  TASK_DELETE = 'task-delete',
+  TASK_CLOSE_ALL = 'task-close-all',
+  TASK_CLOSE_OTHER = 'task-close-other',
+  TASK_RUN_DAG = 'task-run-dag',
+  TASK_RUN_LINEAGE = 'task-run-lineage',
+  TASK_RUN_SUBMIT = 'task-run-submit',
+  TASK_PREVIEW_RESULT = 'task-preview-result',
+  TASK_RUN_DEBUG = 'task-run-debug',
+  TASK_RUN_LOCATION = 'task-run-location',
+  TASK_TAB_CHANGE = 'task-tab-change'
 }

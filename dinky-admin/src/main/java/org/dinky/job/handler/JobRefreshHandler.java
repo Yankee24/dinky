@@ -19,10 +19,13 @@
 
 package org.dinky.job.handler;
 
+import static org.dinky.utils.JsonUtils.objectMapper;
+
 import org.dinky.api.FlinkAPI;
 import org.dinky.assertion.Asserts;
 import org.dinky.cluster.FlinkClusterInfo;
 import org.dinky.context.SpringContextUtils;
+import org.dinky.context.TenantContextHolder;
 import org.dinky.data.constant.FlinkRestResultConstant;
 import org.dinky.data.dto.ClusterConfigurationDTO;
 import org.dinky.data.dto.JobDataDto;
@@ -36,12 +39,14 @@ import org.dinky.data.flink.exceptions.FlinkJobExceptionsDetail;
 import org.dinky.data.flink.job.FlinkJobDetailInfo;
 import org.dinky.data.flink.watermark.FlinkJobNodeWaterMark;
 import org.dinky.data.model.ClusterInstance;
+import org.dinky.data.model.SystemConfiguration;
 import org.dinky.data.model.ext.JobInfoDetail;
 import org.dinky.data.model.job.JobInstance;
 import org.dinky.gateway.Gateway;
 import org.dinky.gateway.config.GatewayConfig;
 import org.dinky.gateway.exception.NotSupportGetStatusException;
 import org.dinky.gateway.model.FlinkClusterConfig;
+import org.dinky.init.FlinkHistoryServer;
 import org.dinky.job.JobConfig;
 import org.dinky.service.ClusterInstanceService;
 import org.dinky.service.HistoryService;
@@ -52,6 +57,8 @@ import org.dinky.utils.TimeUtil;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.context.annotation.DependsOn;
@@ -59,6 +66,7 @@ import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson2.JSON;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.type.CollectionType;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
@@ -94,6 +102,10 @@ public class JobRefreshHandler {
      * @return True if the job is done, false otherwise.
      */
     public static boolean refreshJob(JobInfoDetail jobInfoDetail, boolean needSave) {
+        if (Asserts.isNull(TenantContextHolder.get())) {
+            jobInstanceService.initTenantByJobInstanceId(
+                    jobInfoDetail.getInstance().getId());
+        }
         log.debug(
                 "Start to refresh job: {}->{}",
                 jobInfoDetail.getInstance().getId(),
@@ -223,6 +235,13 @@ public class JobRefreshHandler {
      * @return {@link org.dinky.data.dto.JobDataDto}.
      */
     public static JobDataDto getJobData(Integer id, String jobManagerHost, String jobId) {
+        if (FlinkHistoryServer.HISTORY_JOBID_SET.contains(jobId)
+                && SystemConfiguration.getInstances().getUseFlinkHistoryServer().getValue()) {
+            jobManagerHost = "127.0.0.1:"
+                    + SystemConfiguration.getInstances()
+                            .getFlinkHistoryServerPort()
+                            .getValue();
+        }
         JobDataDto.JobDataDtoBuilder builder = JobDataDto.builder();
         FlinkAPI api = FlinkAPI.build(jobManagerHost);
         try {
@@ -240,8 +259,15 @@ public class JobRefreshHandler {
             api.getVertices(jobId).forEach(vertex -> {
                 flinkJobDetailInfo.getPlan().getNodes().forEach(planNode -> {
                     if (planNode.getId().equals(vertex)) {
-                        planNode.setWatermark(
-                                JsonUtils.toList(api.getWatermark(jobId, vertex), FlinkJobNodeWaterMark.class));
+                        try {
+                            CollectionType listType = objectMapper
+                                    .getTypeFactory()
+                                    .constructCollectionType(ArrayList.class, FlinkJobNodeWaterMark.class);
+                            List<FlinkJobNodeWaterMark> watermark =
+                                    objectMapper.readValue(api.getWatermark(jobId, vertex), listType);
+                            planNode.setWatermark(watermark);
+                        } catch (Exception ignored) {
+                        }
                         planNode.setBackpressure(JsonUtils.toJavaBean(
                                 api.getBackPressure(jobId, vertex), FlinkJobNodeBackPressure.class));
                     }
@@ -279,7 +305,8 @@ public class JobRefreshHandler {
         ClusterConfigurationDTO clusterCfg = jobInfoDetail.getClusterConfiguration();
         ClusterInstance clusterInstance = jobInfoDetail.getClusterInstance();
         if (!Asserts.isNull(clusterCfg)
-                && GatewayType.YARN_PER_JOB.getLongValue().equals(clusterInstance.getType())) {
+                && (GatewayType.YARN_PER_JOB.getLongValue().equals(clusterInstance.getType())
+                        || GatewayType.YARN_APPLICATION.getLongValue().equals(clusterInstance.getType()))) {
             try {
                 String appId = jobInfoDetail.getClusterInstance().getName();
 

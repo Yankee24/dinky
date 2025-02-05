@@ -72,7 +72,11 @@ public class FlinkAPI {
     private static final ObjectMapper mapper = new ObjectMapper();
 
     public FlinkAPI(String address) {
-        this.address = address;
+        if (address.startsWith(NetConstant.HTTP) || address.startsWith(NetConstant.HTTPS)) {
+            this.address = address;
+        } else {
+            this.address = NetConstant.HTTP + address;
+        }
     }
 
     public static FlinkAPI build(String address) {
@@ -100,17 +104,28 @@ public class FlinkAPI {
      * @return {@link String}
      */
     private String getResult(String route) {
-        return HttpUtil.get(NetConstant.HTTP + address + NetConstant.SLASH + route, NetConstant.SERVER_TIME_OUT_ACTIVE);
+        String url = address + NetConstant.SLASH + route;
+        if (!address.startsWith(NetConstant.HTTP) && !address.startsWith(NetConstant.HTTPS)) {
+            url = NetConstant.HTTP + url;
+        }
+        return HttpUtil.get(url, NetConstant.SERVER_TIME_OUT_ACTIVE);
     }
 
     private JsonNode post(String route, String body) {
-        String res = HttpUtil.post(
-                NetConstant.HTTP + address + NetConstant.SLASH + route, body, NetConstant.SERVER_TIME_OUT_ACTIVE);
+        String url = address + NetConstant.SLASH + route;
+        if (!address.startsWith(NetConstant.HTTP) && !address.startsWith(NetConstant.HTTPS)) {
+            url = NetConstant.HTTP + url;
+        }
+        String res = HttpUtil.post(url, body, NetConstant.SERVER_TIME_OUT_ACTIVE);
         return parse(res);
     }
 
     private JsonNode patch(String route, String body) {
-        String res = HttpUtil.createRequest(Method.PATCH, NetConstant.HTTP + address + NetConstant.SLASH + route)
+        String url = address + NetConstant.SLASH + route;
+        if (!address.startsWith(NetConstant.HTTP) && !address.startsWith(NetConstant.HTTPS)) {
+            url = NetConstant.HTTP + url;
+        }
+        String res = HttpUtil.createRequest(Method.PATCH, url)
                 .timeout(NetConstant.SERVER_TIME_OUT_ACTIVE)
                 .body(body)
                 .execute()

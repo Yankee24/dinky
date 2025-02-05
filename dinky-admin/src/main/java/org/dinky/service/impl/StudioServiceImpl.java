@@ -25,6 +25,7 @@ import org.dinky.config.Dialect;
 import org.dinky.data.dto.StudioDDLDTO;
 import org.dinky.data.dto.StudioLineageDTO;
 import org.dinky.data.dto.StudioMetaStoreDTO;
+import org.dinky.data.dto.TaskDTO;
 import org.dinky.data.model.Catalog;
 import org.dinky.data.model.ClusterInstance;
 import org.dinky.data.model.Column;
@@ -51,6 +52,7 @@ import org.dinky.utils.RunTimeUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -118,9 +120,14 @@ public class StudioServiceImpl implements StudioService {
                         studioCADTO.getStatement(), studioCADTO.getDialect().toLowerCase(), dataBase.getDriverConfig());
             }
         } else {
-            String envSql = taskService.buildEnvSql(studioCADTO);
-            studioCADTO.setStatement(studioCADTO.getStatement() + envSql);
-            return LineageBuilder.getColumnLineageByLogicalPlan(studioCADTO.getStatement());
+            TaskDTO taskDTO = taskService.getTaskInfoById(studioCADTO.getTaskId());
+            taskDTO.setStatement(taskService.buildEnvSql(taskDTO) + studioCADTO.getStatement());
+            JobConfig jobConfig = taskDTO.getJobConfig();
+            Optional.ofNullable(studioCADTO.getConfigJson()).ifPresent(config -> {
+                jobConfig.setUdfRefer(studioCADTO.getConfigJson().getUdfReferMaps());
+                jobConfig.setConfigJson(studioCADTO.getConfigJson().getCustomConfigMaps());
+            });
+            return LineageBuilder.getColumnLineageByLogicalPlan(taskDTO.getStatement(), jobConfig);
         }
     }
 
@@ -207,7 +214,7 @@ public class StudioServiceImpl implements StudioService {
     private JobManager getJobManager(StudioMetaStoreDTO studioMetaStoreDTO, String envSql) {
         JobManager jobManager = jobManagerCache.get(envSql, () -> {
             JobConfig config = studioMetaStoreDTO.getJobConfig();
-            JobManager jobManagerTmp = JobManager.build(config);
+            JobManager jobManagerTmp = JobManager.buildPlanMode(config);
             jobManagerTmp.executeDDL(envSql);
             return jobManagerTmp;
         });

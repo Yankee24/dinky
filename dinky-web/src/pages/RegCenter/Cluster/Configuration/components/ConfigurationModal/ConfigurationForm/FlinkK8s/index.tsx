@@ -20,7 +20,6 @@
 import CodeEdit from '@/components/CustomEditor/CodeEdit';
 import FlinkOptionsSelect from '@/components/Flink/OptionsSelect';
 import { TagAlignCenter } from '@/components/StyledComponents';
-import { StateType } from '@/pages/DataStudio/model';
 import {
   ExposedTypeOptions,
   versionOptions
@@ -28,7 +27,6 @@ import {
 import { KUBERNETES_CONFIG_LIST } from '@/pages/RegCenter/Cluster/Configuration/components/contants';
 import { ClusterType } from '@/pages/RegCenter/Cluster/constants';
 import { l } from '@/utils/intl';
-import { connect } from '@@/exports';
 import { UploadOutlined } from '@ant-design/icons';
 import {
   ProCard,
@@ -36,13 +34,15 @@ import {
   ProFormItem,
   ProFormList,
   ProFormSelect,
+  ProFormSwitch,
   ProFormText
 } from '@ant-design/pro-components';
-import { Button, Col, Divider, Row, Space, Typography, Upload, UploadProps } from 'antd';
+import { Button, Col, Divider, Form, Row, Space, Typography, Upload, UploadProps } from 'antd';
 import { FormInstance } from 'antd/es/form/hooks/useForm';
 import { RcFile } from 'antd/es/upload/interface';
 import { Values } from 'async-validator';
 import { editor } from 'monaco-editor';
+import { DefaultOptionType } from 'antd/es/select';
 
 const { Text } = Typography;
 
@@ -53,7 +53,12 @@ const CodeEditProps = {
   language: 'yaml'
 };
 
-const FlinkK8s = (props: { type: string; value: any; form: FormInstance<Values> } & connect) => {
+export default (props: {
+  type: string;
+  value: any;
+  form: FormInstance<Values>;
+  flinkConfigOptions: DefaultOptionType[];
+}) => {
   const { type, value, form, flinkConfigOptions } = props;
   const k8sConfig = value.config?.kubernetesConfig;
 
@@ -152,6 +157,11 @@ const FlinkK8s = (props: { type: string; value: any; form: FormInstance<Values> 
     }
   ];
 
+  const ingressEnabled = Form.useWatch(
+    ['config', 'kubernetesConfig', 'ingressConfig', 'kubernetes.ingress.enabled'],
+    form
+  );
+
   return (
     <>
       <Divider>{l('rc.cc.k8sConfig')}</Divider>
@@ -191,6 +201,39 @@ const FlinkK8s = (props: { type: string; value: any; form: FormInstance<Values> 
               placeholder={l('rc.cc.flinkConfigPathPlaceholder')}
               tooltip={l('rc.cc.flinkConfigPathHelp')}
             />
+            {type &&
+              (type === ClusterType.KUBERNETES_APPLICATION ||
+                type === ClusterType.KUBERNETES_OPERATOR) && (
+                <ProFormSwitch
+                  name={[
+                    'config',
+                    'kubernetesConfig',
+                    'ingressConfig',
+                    'kubernetes.ingress.enabled'
+                  ]}
+                  label={l('rc.cc.k8s.ingress.enabled')}
+                  initialValue={false}
+                  checkedChildren={l('button.enable')}
+                  unCheckedChildren={l('button.disable')}
+                />
+              )}
+            {type &&
+              (type === ClusterType.KUBERNETES_APPLICATION ||
+                type === ClusterType.KUBERNETES_OPERATOR) &&
+              ingressEnabled && (
+                <ProFormText
+                  tooltip={l('rc.cc.k8s.ingress.domainHelp')}
+                  name={[
+                    'config',
+                    'kubernetesConfig',
+                    'ingressConfig',
+                    'kubernetes.ingress.domain'
+                  ]}
+                  label={l('rc.cc.k8s.ingress.domain')}
+                  rules={[{ required: true }]}
+                  placeholder={l('rc.cc.k8s.ingress.domainHelp')}
+                />
+              )}
           </ProFormGroup>
           <ProFormList
             name={['config', 'flinkConfig', 'flinkConfigList']}
@@ -225,7 +268,3 @@ const FlinkK8s = (props: { type: string; value: any; form: FormInstance<Values> 
     </>
   );
 };
-
-export default connect(({ Studio }: { Studio: StateType }) => ({
-  flinkConfigOptions: Studio.flinkConfigOptions
-}))(FlinkK8s);

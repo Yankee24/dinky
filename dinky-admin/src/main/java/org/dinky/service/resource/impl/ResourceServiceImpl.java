@@ -24,6 +24,7 @@ import org.dinky.data.dto.TreeNodeDTO;
 import org.dinky.data.enums.Status;
 import org.dinky.data.exception.BusException;
 import org.dinky.data.model.Resources;
+import org.dinky.data.model.SystemConfiguration;
 import org.dinky.data.result.Result;
 import org.dinky.mapper.ResourcesMapper;
 import org.dinky.resource.BaseResourceManager;
@@ -53,7 +54,9 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.Opt;
 import cn.hutool.core.util.StrUtil;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class ResourceServiceImpl extends ServiceImpl<ResourcesMapper, Resources> implements ResourcesService {
     private static final TimedCache<Integer, Resources> RESOURCES_CACHE = new TimedCache<>(30 * 1000);
@@ -83,6 +86,8 @@ public class ResourceServiceImpl extends ServiceImpl<ResourcesMapper, Resources>
                                 x.setType(resources.getType());
                                 x.setUserId(resources.getUserId());
                             }
+                            x.setId(Math.abs(x.getId()));
+                            x.setPid(Math.abs(x.getPid()));
                         })
                         .collect(Collectors.toList());
         // not delete root directory
@@ -322,7 +327,17 @@ public class ResourceServiceImpl extends ServiceImpl<ResourcesMapper, Resources>
                         == -1,
                 () -> new BusException(Status.ROOT_DIR_NOT_ALLOW_DELETE));
         try {
+            SystemConfiguration systemConfiguration = SystemConfiguration.getInstances();
+
             Resources byId = getById(id);
+
+            if (systemConfiguration.getPhysicalDeletion().getValue()) {
+                getBaseResourceManager().remove(byId.getFullName());
+                log.warn(
+                        "The resource type you have configured is [{}] and physical deletion is enabled. The File or Directory [{}] will be deleted",
+                        systemConfiguration.getResourcesModel().getValue().name(),
+                        byId.getFullName());
+            }
             if (isExistsChildren(id)) {
                 if (byId.getIsDirectory()) {
                     List<Resources> resourceByPidToChildren =

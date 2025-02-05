@@ -32,11 +32,6 @@
         <hadoop.version>3.1.0</hadoop.version>
     </properties>
     <dependencies>
-        <!--<dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy</artifactId>
-            <version>3.0.9</version>
-        </dependency>-->
         <dependency>
             <groupId>org.dinky</groupId>
             <artifactId>dinky-common</artifactId>
@@ -56,32 +51,7 @@
         </dependency>
         <dependency>
             <groupId>org.dinky</groupId>
-            <artifactId>dinky-alert-dingtalk</artifactId>
-            <scope>${scope.runtime}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.dinky</groupId>
-            <artifactId>dinky-alert-wechat</artifactId>
-            <scope>${scope.runtime}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.dinky</groupId>
-            <artifactId>dinky-alert-feishu</artifactId>
-            <scope>${scope.runtime}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.dinky</groupId>
-            <artifactId>dinky-alert-sms</artifactId>
-            <scope>${scope.runtime}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.dinky</groupId>
-            <artifactId>dinky-alert-email</artifactId>
-            <scope>${scope.runtime}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.dinky</groupId>
-            <artifactId>dinky-alert-http</artifactId>
+            <artifactId>dinky-metadata-paimon</artifactId>
             <scope>${scope.runtime}</scope>
         </dependency>
         <dependency>
@@ -199,10 +169,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <scope>test</scope>
@@ -251,6 +217,11 @@
                 </dependency>
                 <dependency>
                     <groupId>org.dinky</groupId>
+                    <artifactId>dinky-catalog-postgres-${dinky.flink.version}</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dinky</groupId>
                     <artifactId>dinky-client-${dinky.flink.version}</artifactId>
                     <scope>${scope.runtime}</scope>
                 </dependency>
@@ -276,6 +247,11 @@
                 </dependency>
                 <dependency>
                     <groupId>org.dinky</groupId>
+                    <artifactId>dinky-catalog-postgres-1.14</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dinky</groupId>
                     <artifactId>dinky-flink-1.14</artifactId>
                     <scope>${scope.runtime}</scope>
                 </dependency>
@@ -287,6 +263,11 @@
                 <dependency>
                     <groupId>org.dinky</groupId>
                     <artifactId>dinky-catalog-mysql-1.15</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dinky</groupId>
+                    <artifactId>dinky-catalog-postgres-1.15</artifactId>
                     <scope>${scope.runtime}</scope>
                 </dependency>
                 <dependency>
@@ -307,6 +288,11 @@
                 </dependency>
                 <dependency>
                     <groupId>org.dinky</groupId>
+                    <artifactId>dinky-catalog-postgres-1.16</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dinky</groupId>
                     <artifactId>dinky-flink-1.16</artifactId>
                     <scope>${scope.runtime}</scope>
                 </dependency>
@@ -319,6 +305,11 @@
                 <dependency>
                     <groupId>org.dinky</groupId>
                     <artifactId>dinky-catalog-mysql-1.17</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dinky</groupId>
+                    <artifactId>dinky-catalog-postgres-1.17</artifactId>
                     <scope>${scope.runtime}</scope>
                 </dependency>
                 <dependency>
@@ -339,6 +330,11 @@
                 </dependency>
                 <dependency>
                     <groupId>org.dinky</groupId>
+                    <artifactId>dinky-catalog-postgres-1.18</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dinky</groupId>
                     <artifactId>dinky-flink-1.18</artifactId>
                     <scope>${scope.runtime}</scope>
                 </dependency>
@@ -355,9 +351,36 @@
                 </dependency>
                 <dependency>
                     <groupId>org.dinky</groupId>
+                    <artifactId>dinky-catalog-postgres-1.19</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dinky</groupId>
                     <artifactId>dinky-flink-1.19</artifactId>
                     <scope>${scope.runtime}</scope>
                 </dependency>
+
+                <dependency>
+                    <groupId>org.dinky</groupId>
+                    <artifactId>dinky-client-1.20</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dinky</groupId>
+                    <artifactId>dinky-catalog-mysql-1.20</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dinky</groupId>
+                    <artifactId>dinky-catalog-postgres-1.20</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.dinky</groupId>
+                    <artifactId>dinky-flink-1.20</artifactId>
+                    <scope>${scope.runtime}</scope>
+                </dependency>
+
             </dependencies>
         </profile>
 

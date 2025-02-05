@@ -26,7 +26,9 @@ import org.dinky.data.model.Schema;
 import org.dinky.data.model.Table;
 import org.dinky.executor.CustomTableEnvironment;
 
+import org.apache.flink.table.catalog.CatalogBaseTable;
 import org.apache.flink.table.catalog.ObjectIdentifier;
+import org.apache.flink.table.catalog.ObjectPath;
 import org.apache.flink.table.types.logical.DecimalType;
 import org.apache.flink.table.types.logical.LogicalType;
 import org.apache.flink.table.types.logical.TimestampType;
@@ -65,6 +67,15 @@ public class FlinkTableMetadataUtil {
         customTableEnvironment.useDatabase(database);
         for (String tableName : customTableEnvironment.getCatalogManager().listTables(catalogName, database)) {
             Table table = Table.build(tableName, catalogName);
+            customTableEnvironment.getCatalogManager().getCatalog(catalogName).ifPresent(t -> {
+                try {
+                    CatalogBaseTable baseTable = t.getTable(new ObjectPath(database, tableName));
+                    table.setComment(baseTable.getComment());
+                    table.setOptions(baseTable.getOptions().toString());
+                } catch (Exception e) {
+                    // nothing to do
+                }
+            });
             tables.add(table);
         }
         schema.setTables(tables);
@@ -99,6 +110,7 @@ public class FlinkTableMetadataUtil {
                                 .type(logicalType.getTypeRoot().name())
                                 .keyFlag(isPrimaryKey.get())
                                 .isNullable(logicalType.isNullable())
+                                .comment(flinkColumn.getComment().orElse(""))
                                 .position(i)
                                 .build();
                         if (logicalType instanceof VarCharType) {
@@ -110,22 +122,10 @@ public class FlinkTableMetadataUtil {
                             column.setScale(((DecimalType) logicalType).getScale());
                         }
 
-                        for (ColumnType columnType : ColumnType.values()) {
-                            if (columnType
-                                    .getJavaType()
-                                    .equals(flinkColumn
-                                            .getDataType()
-                                            .getConversionClass()
-                                            .getName())) {
-                                column.setJavaType(columnType);
-                                break;
-                            }
-                        }
-                        //                            FlinkColumn flinkColumn = FlinkColumn.build(i,
-                        // column.getName(), column.getDataType().getConversionClass().getName(),
-                        // isPrimaryKey.get(), column.getDataType().getLogicalType().isNullable(),
-                        // column.explainExtras().orElse(""), "", column.getComment().orElse(""));
-
+                        String dataTypeName =
+                                flinkColumn.getDataType().getConversionClass().getName();
+                        ColumnType columnType = ColumnType.getByJavaType(dataTypeName);
+                        column.setJavaType(columnType);
                         columns.add(column);
                     }
                 });

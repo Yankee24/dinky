@@ -22,9 +22,9 @@ package org.dinky.context;
 import static org.dinky.data.constant.MonitorTableConstant.JOB_ID;
 
 import org.dinky.data.constant.MonitorTableConstant;
-import org.dinky.data.enums.SseTopic;
 import org.dinky.data.vo.MetricsVO;
 import org.dinky.utils.SqliteUtil;
+import org.dinky.ws.handler.ProcessConsole;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -33,18 +33,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
-import cn.hutool.core.text.StrFormatter;
+import cn.hutool.core.map.MapUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,31 +62,6 @@ public class MetricsContextHolder {
                 "%s BIGINT, %s TEXT, %s TEXT, %s INTEGER",
                 JOB_ID, MonitorTableConstant.VALUE, MonitorTableConstant.HEART_TIME, MonitorTableConstant.DATE);
         SqliteUtil.INSTANCE.createTable(MonitorTableConstant.DINKY_METRICS, sql);
-    }
-
-    // Create a ThreadFactory with custom naming
-    ThreadFactory namedThreadFactory =
-            new ThreadFactoryBuilder().setNameFormat("metrics-send-thread-%d").build();
-
-    // Create a custom ThreadPoolExecutor
-    ExecutorService pool = new ThreadPoolExecutor(
-            5, // Core pool size
-            10, // Maximum pool size, allows the pool to expand as needed
-            60L, // Keep alive time for idle threads
-            TimeUnit.SECONDS, // Unit of keep alive time
-            new LinkedBlockingQueue<>(10), // Use a larger queue to hold excess tasks
-            namedThreadFactory);
-
-    public void sendAsync(String key, MetricsVO o) {
-        Object content = o.getContent();
-        if (content == null
-                || (content instanceof ConcurrentHashMap && ((ConcurrentHashMap<?, ?>) content).isEmpty())) {
-            return; // Return early to avoid unnecessary operations
-        }
-        pool.execute(() -> {
-            String topic = StrFormatter.format("{}/{}", SseTopic.METRICS.getValue(), key);
-            SseSessionContextHolder.sendTopic(topic, o); // Ensure only successfully added metrics are sent
-        });
     }
 
     public void saveToSqlite(String key, MetricsVO o) {
@@ -117,8 +87,10 @@ public class MetricsContextHolder {
             }
             metricsVOS.clear();
         }
-        String topic = StrFormatter.format("{}/{}", SseTopic.METRICS.getValue(), key);
-        SseSessionContextHolder.sendTopic(topic, o);
+        Map<String, Object> data = MapUtil.<String, Object>builder().put(key, o).build();
+
+        // send ws event
+        SpringUtil.getBean(ProcessConsole.class).sendData(data);
     }
 
     public List<List<String>> convertMetricsVOsToStringList(List<MetricsVO> metricsVOS) {

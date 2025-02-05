@@ -30,6 +30,12 @@
  */
 export default [
   {
+    path: '/welcome',
+    component: './Other/Welcome',
+    layout: false,
+    hideInMenu: true
+  },
+  {
     path: '/user',
     layout: false,
     routes: [
@@ -243,6 +249,12 @@ export default [
         name: 'token',
         icon: 'SecurityScanOutlined',
         component: './AuthCenter/Token'
+      },
+      {
+        path: '/auth/approval',
+        name: 'approval',
+        icon: 'AuditOutlined',
+        component: './AuthCenter/Approval'
       }
     ]
   },
@@ -282,13 +294,6 @@ export default [
         component: './SettingCenter/ClassLoaderJars'
       }
     ]
-  },
-  {
-    path: '/metrics',
-    name: 'metrics',
-    icon: 'DashboardOutlined',
-    footerRender: false,
-    component: './Metrics'
   },
 
   {

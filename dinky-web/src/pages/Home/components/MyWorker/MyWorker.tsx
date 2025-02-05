@@ -17,18 +17,20 @@
  *
  */
 
-import { Card, Space, Tag, Typography } from 'antd';
+import { Button, Card, Space, Typography } from 'antd';
 import useHookRequest from '@/hooks/useHookRequest';
 import { getData } from '@/services/api';
 import { API_CONSTANTS } from '@/services/endpoints';
 import { TaskInfo } from '@/types/Studio/data';
-import { getTabIcon } from '@/pages/DataStudio/MiddleContainer/function';
 import { ProCard } from '@ant-design/pro-components';
 import JobLifeCycleTag from '@/components/JobTags/JobLifeCycleTag';
 import StatusTag from '@/components/JobTags/StatusTag';
 import EllipsisMiddle from '@/components/Typography/EllipsisMiddle';
 import { l } from '@/utils/intl';
 import { history } from 'umi';
+import { formatDateToYYYYMMDDHHMMSS } from '@/utils/function';
+import { ErrorMessageAsync } from '@/utils/messages';
+import { getTabIcon } from '@/pages/DataStudio/function';
 
 const MyWorker = () => {
   const { loading, data } = useHookRequest<any, any>(getData, {
@@ -49,14 +51,21 @@ const MyWorker = () => {
   return (
     <Card
       style={{
-        marginBottom: 24
+        marginBottom: 18,
+        height: 'calc(100vh - 32%)'
       }}
       title={l('home.mywork')}
       bordered={false}
-      extra={<a href='/'>{l('home.allwork')}</a>}
+      extra={
+        <Button type='link' onClick={() => history.push('/devops')}>
+          {l('home.allwork')}
+        </Button>
+      }
       loading={loading}
-      bodyStyle={{
-        padding: 0
+      styles={{
+        body: {
+          padding: 0
+        }
       }}
     >
       <Card
@@ -68,6 +77,7 @@ const MyWorker = () => {
         {data?.map((item: TaskInfo) => (
           <Card.Grid key={item.id} style={{ padding: 5 }}>
             <ProCard
+              style={{ cursor: 'pointer' }}
               bordered={false}
               title={renderTitle(item)}
               extra={
@@ -75,11 +85,22 @@ const MyWorker = () => {
                   <JobLifeCycleTag animation={false} bordered={false} status={item.step} />
                 </Space>
               }
-              onClick={() => history.push('/devops/job-detail?id=' + item.jobInstanceId)}
+              onClick={async () => {
+                if (!item.jobInstanceId) {
+                  await ErrorMessageAsync(l('home.task.not.instance'), 2);
+                  return;
+                } else {
+                  history.push('/devops/job-detail?id=' + item.jobInstanceId);
+                }
+              }}
             >
               <div style={{ marginBottom: 10 }}>{item.note ?? l('home.task.not.desc')}</div>
               <Space style={{ fontSize: 10 }}>
-                <Typography.Text type='secondary'>{item.updateTime.toString()}</Typography.Text>
+                <Typography.Text type='secondary'>
+                  {l('home.task.update.at', '', {
+                    time: formatDateToYYYYMMDDHHMMSS(item.updateTime)
+                  })}
+                </Typography.Text>
                 <StatusTag animation={false} bordered={false} status={item.status} />
               </Space>
             </ProCard>

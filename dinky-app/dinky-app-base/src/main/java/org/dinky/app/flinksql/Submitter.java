@@ -30,12 +30,13 @@ import org.dinky.constant.CustomerConfigureOptions;
 import org.dinky.constant.FlinkSQLConstant;
 import org.dinky.data.app.AppParamConfig;
 import org.dinky.data.app.AppTask;
+import org.dinky.data.constant.DirConstant;
 import org.dinky.data.enums.GatewayType;
+import org.dinky.data.job.SqlType;
 import org.dinky.data.model.SystemConfiguration;
 import org.dinky.executor.Executor;
 import org.dinky.executor.ExecutorConfig;
 import org.dinky.executor.ExecutorFactory;
-import org.dinky.parser.SqlType;
 import org.dinky.resource.BaseResourceManager;
 import org.dinky.trans.Operations;
 import org.dinky.trans.dml.ExecuteJarOperation;
@@ -52,6 +53,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.Plan;
 import org.apache.flink.api.dag.Pipeline;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.configuration.PipelineOptions;
 import org.apache.flink.configuration.ReadableConfig;
 import org.apache.flink.core.execution.JobClient;
 import org.apache.flink.python.PythonOptions;
@@ -161,7 +163,7 @@ public class Submitter {
         if (!sqlFile.exists()) {
             sqlFile = new File(confDir, sqlFileName);
             if (!sqlFile.exists()) {
-                log.error("sql file not found,current dir:{},conf dir:{}", System.getProperty("user.dir"), confDir);
+                log.error("sql file not found,current dir:{},conf dir:{}", DirConstant.getRootPath(), confDir);
                 throw new RuntimeException("sql file not found");
             }
         }
@@ -253,9 +255,12 @@ public class Submitter {
         for (String statement : statements) {
             if (ExecuteJarParseStrategy.INSTANCE.match(statement)) {
                 ExecuteJarOperation executeJarOperation = new ExecuteJarOperation(statement);
-                Pipeline pipeline = executeJarOperation.getStreamGraph(executor.getCustomTableEnvironment());
+
                 ReadableConfig configuration =
                         executor.getStreamExecutionEnvironment().getConfiguration();
+                List<String> jars = configuration.get(PipelineOptions.JARS);
+                List<URL> jarsUrl = jars.stream().map(URLUtil::url).collect(Collectors.toList());
+                Pipeline pipeline = executeJarOperation.getStreamGraph(executor.getCustomTableEnvironment(), jarsUrl);
                 if (pipeline instanceof StreamGraph) {
                     // stream job
                     StreamGraph streamGraph = (StreamGraph) pipeline;
