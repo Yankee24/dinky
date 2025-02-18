@@ -23,15 +23,13 @@ import org.dinky.data.ext.ConfigItem;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-@AllArgsConstructor(onConstructor = @__(@JsonCreator))
+@AllArgsConstructor
 public class HttpParams {
 
     private String url;

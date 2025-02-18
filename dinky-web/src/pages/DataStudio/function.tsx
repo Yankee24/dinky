@@ -17,239 +17,225 @@
  *
  */
 
+import { RightContextMenuState } from '@/pages/DataStudio/data.d';
+import { createContext, Dispatch, SetStateAction } from 'react';
+import { ContextMenuPosition } from '@/types/Public/state';
+import { DockLayout, DropDirection, LayoutBase } from 'rc-dock';
+import { ToolbarPosition } from '@/pages/DataStudio/Toolbar/data.d';
+import { BoxBase, PanelBase } from 'rc-dock/es';
+import { DataStudioState } from '@/pages/DataStudio/model';
+import { LayoutData } from 'rc-dock/src/DockData';
+import { JOB_STATUS, JOB_SUBMIT_STATUS } from '@/pages/DevOps/constants';
 import {
-  DataStudioTabsItemType,
-  EnvType,
-  FooterType,
-  JobRunningMsgType,
-  MetadataTabsItemType,
-  STUDIO_MODEL,
-  STUDIO_MODEL_ASYNC,
-  TabsItemType,
-  TabsPageType,
-  TaskDataType
-} from '@/pages/DataStudio/model';
-import { CONFIG_MODEL_ASYNC } from '@/pages/SettingCenter/GlobalSetting/model';
+  FileIcon,
+  FlinkJarSvg,
+  FlinkSQLEnvSvg,
+  FlinkSQLSvg,
+  JavaSvg,
+  LogSvg,
+  MarkDownSvg,
+  PythonSvg,
+  ScalaSvg,
+  ShellSvg,
+  XMLSvg,
+  YAMLSvg
+} from '@/components/Icons/CodeLanguageIcon';
 import { DIALECT } from '@/services/constants';
+import {
+  ClickHouseIcons,
+  DorisIcons,
+  HiveIcons,
+  MysqlIcons,
+  OracleIcons,
+  PhoenixIcons,
+  PostgresqlIcons,
+  PrestoIcons,
+  SQLIcons,
+  SqlServerIcons,
+  StarRocksIcons
+} from '@/components/Icons/DBIcons';
+import { CodeTwoTone } from '@ant-design/icons';
 import { UserBaseInfo } from '@/types/AuthCenter/data.d';
-import { Cluster, DataSources } from '@/types/RegCenter/data';
 import { TaskOwnerLockingStrategy } from '@/types/SettingCenter/data.d';
-import { l } from '@/utils/intl';
-import { Dispatch } from '@@/plugin-dva/types';
 import { Col, Row } from 'antd';
+import { l } from '@/utils/intl';
 
-export const mapDispatchToProps = (dispatch: Dispatch) => ({
-  updateToolContentHeight: (key: number) =>
-    dispatch({
-      type: STUDIO_MODEL.updateToolContentHeight,
-      payload: key
-    }),
-  updateCenterContentHeight: (key: number) =>
-    dispatch({
-      type: STUDIO_MODEL.updateCenterContentHeight,
-      payload: key
-    }),
-  updateSelectLeftKey: (key: string) =>
-    dispatch({
-      type: STUDIO_MODEL.updateSelectLeftKey,
-      payload: key
-    }),
-  updateLeftWidth: (width: number) =>
-    dispatch({
-      type: STUDIO_MODEL.updateLeftWidth,
-      payload: width
-    }),
-  updateSelectRightKey: (key: string) =>
-    dispatch({
-      type: STUDIO_MODEL.updateSelectRightKey,
-      payload: key
-    }),
-  updateRightWidth: (width: number) =>
-    dispatch({
-      type: STUDIO_MODEL.updateRightWidth,
-      payload: width
-    }),
-  updateSelectBottomKey: (key: string) =>
-    dispatch({
-      type: STUDIO_MODEL.updateSelectBottomKey,
-      payload: key
-    }),
-  updateSelectBottomSubKey: (key: string) =>
-    dispatch({
-      type: STUDIO_MODEL.updateSelectBottomSubKey,
-      payload: key
-    }),
-  updateBottomHeight: (height: number) =>
-    dispatch({
-      type: STUDIO_MODEL.updateBottomHeight,
-      payload: height
-    }),
-  saveDataBase: (data: DataSources.DataSource[]) =>
-    dispatch({
-      type: STUDIO_MODEL.saveDataBase,
-      payload: data
-    }),
-  queryDatabaseList: () =>
-    dispatch({
-      type: STUDIO_MODEL_ASYNC.queryDatabaseList
-    }),
-  queryTaskData: (payload: any) => {
-    dispatch({
-      type: STUDIO_MODEL_ASYNC.queryTaskData,
-      ...payload
-    });
-  },
-  queryTaskSortTypeData: () => {
-    dispatch({
-      type: STUDIO_MODEL_ASYNC.queryTaskSortTypeData
-    });
-  },
-  querySessionData: () => {
-    dispatch({
-      type: STUDIO_MODEL_ASYNC.querySessionData
-    });
-  },
-  queryEnv: () => {
-    dispatch({
-      type: STUDIO_MODEL_ASYNC.queryEnv
-    });
-  },
-  queryClusterConfigurationData: () => {
-    dispatch({
-      type: STUDIO_MODEL_ASYNC.queryClusterConfigurationData
-    });
-  },
-  queryUserData: (params: {}) => {
-    dispatch({
-      type: STUDIO_MODEL_ASYNC.queryUserData,
-      payload: params
-    });
-  },
+// 遍历layout，获取所有激活和打开的tab
+export const getAllPanel = (newLayout: LayoutBase) => {
+  return [
+    ...getBoxPanels(newLayout.dockbox),
+    ...getBoxPanels(newLayout.floatbox),
+    ...getBoxPanels(newLayout.maxbox),
+    ...getBoxPanels(newLayout.windowbox)
+  ];
+};
 
-  saveProject: (data: any[]) =>
-    dispatch({
-      type: STUDIO_MODEL.saveProject,
-      payload: data
-    }),
-  updateBottomConsole: (data: string) =>
-    dispatch({
-      type: STUDIO_MODEL.updateBottomConsole,
-      payload: data
-    }),
-  saveSession: (data: Cluster.Instance[]) =>
-    dispatch({
-      type: STUDIO_MODEL.saveSession,
-      payload: data
-    }),
-  saveEnv: (data: EnvType[]) =>
-    dispatch({
-      type: STUDIO_MODEL.saveEnv,
-      payload: data
-    }),
-  saveTabs: (data: TabsItemType[]) =>
-    dispatch({
-      type: STUDIO_MODEL.saveTabs,
-      payload: data
-    }),
-  saveClusterConfiguration: (data: Cluster.Config[]) =>
-    dispatch({
-      type: STUDIO_MODEL.saveClusterConfiguration,
-      payload: data
-    }),
-  updateJobRunningMsg: (data: JobRunningMsgType) =>
-    dispatch({
-      type: STUDIO_MODEL.updateJobRunningMsg,
-      payload: data
-    }),
-  queryDsConfig: (data: string) =>
-    dispatch({
-      type: CONFIG_MODEL_ASYNC.queryDsConfig,
-      payload: data
-    }),
-  queryTaskOwnerLockingStrategy: (data: string) =>
-    dispatch({
-      type: CONFIG_MODEL_ASYNC.queryTaskOwnerLockingStrategy,
-      payload: data
-    })
-});
-
-export function isDataStudioTabsItemType(
-  item: DataStudioTabsItemType | MetadataTabsItemType | TabsItemType | undefined
-): item is DataStudioTabsItemType {
-  return item?.type === TabsPageType.project;
-}
-
-export function isMetadataTabsItemType(
-  item: DataStudioTabsItemType | MetadataTabsItemType | TabsItemType | undefined
-): item is MetadataTabsItemType {
-  return item?.type === TabsPageType.metadata;
-}
-
-export function getCurrentTab(
-  panes: TabsItemType[],
-  activeKey: string
-): DataStudioTabsItemType | MetadataTabsItemType | undefined {
-  const item = panes.find((item) => item.key === activeKey);
-  switch (item?.type) {
-    case 'project':
-      return item as DataStudioTabsItemType;
-    case 'metadata':
-      return item as MetadataTabsItemType;
-    default:
-      return undefined;
+const getBoxPanels = (layout: BoxBase | undefined) => {
+  const tabs: PanelBase[] = [];
+  if (!layout) {
+    return tabs;
   }
-}
+  layout.children?.forEach((child) => {
+    const panel = child as PanelBase;
+    if (panel.tabs) {
+      tabs.push(panel);
+    } else {
+      tabs.push(...getBoxPanels(child as BoxBase));
+    }
+  });
+  return tabs;
+};
 
-export function isProjectTabs(panes: TabsItemType[], activeKey: string): boolean {
-  const item = panes.find((item) => item.key === activeKey);
-  switch (item?.type) {
-    case 'project':
+export const handleRightClick = (
+  e: any,
+  stateAction: Dispatch<SetStateAction<RightContextMenuState>>
+) => {
+  e.preventDefault(); // 阻止浏览器默认的右键行为
+  let x = e.clientX;
+  let y = e.clientY;
+  // 判断右键的位置是否超出屏幕 , 如果超出屏幕则设置为屏幕的最大值
+  if (x + 180 > window.innerWidth) {
+    x = window.innerWidth - 190; // 190 是右键菜单的宽度
+  }
+  if (y + 200 > window.innerHeight) {
+    y = window.innerHeight - 210; // 210 是右键菜单的高度
+  }
+  stateAction((prevState) => {
+    return {
+      ...prevState,
+      show: true,
+      position: {
+        top: y + 5,
+        left: x + 10
+      }
+    } as RightContextMenuState;
+  });
+
+  e.preventDefault(); // 阻止浏览器默认的右键行为
+};
+
+export const InitContextMenuPosition: ContextMenuPosition = {
+  left: 0,
+  top: 0,
+  position: 'fixed',
+  cursor: 'pointer',
+  width: '12vw',
+  zIndex: 1000
+};
+
+// 根据工具栏位置获取停靠位置
+export const getDockPositionByToolbarPosition = (position: ToolbarPosition): DropDirection => {
+  switch (position) {
+    case 'leftTop':
+      return 'left';
+    case 'leftBottom':
+      return 'bottom';
+    case 'right':
+      return 'right';
+    case 'centerContent':
+      return 'right';
+  }
+};
+
+export const getLayoutState = (layout: LayoutData, didInit: boolean): LayoutData => {
+  if (didInit) {
+    return layout;
+  }
+  let floatbox = layout?.floatbox;
+  if (layout?.windowbox?.children) {
+    if (floatbox) {
+      layout.windowbox.children.forEach((item) => {
+        layout.floatbox!!.children.push({ ...item });
+      });
+    } else {
+      floatbox = layout.windowbox;
+    }
+  }
+  return {
+    ...layout,
+    floatbox,
+    windowbox: undefined
+  };
+};
+
+export function isStatusDone(type: string) {
+  if (!type) {
+    return true;
+  }
+  switch (type) {
+    case JOB_STATUS.FAILED:
+    case JOB_STATUS.CANCELED:
+    case JOB_STATUS.FINISHED:
+    case JOB_STATUS.UNKNOWN:
+    case JOB_SUBMIT_STATUS.SUCCESS:
+    case JOB_SUBMIT_STATUS.FAILED:
+    case JOB_SUBMIT_STATUS.CANCEL:
       return true;
     default:
       return false;
   }
 }
-
-export function isShowRightTabsJobConfig(dialect: string): boolean {
-  return assert(
-    dialect,
-    [DIALECT.JAVA, DIALECT.PYTHON_LONG, DIALECT.SCALA, DIALECT.FLINKSQLENV],
-    true,
-    'includes'
-  );
-}
-
-export function getTabByTaskId(
-  panes: TabsItemType[],
-  id: number
-): DataStudioTabsItemType | MetadataTabsItemType | undefined {
-  const item = panes.find((item) => item.treeKey === id);
-  switch (item?.type) {
-    case 'project':
-      return item as DataStudioTabsItemType;
-    case 'metadata':
-      return item as MetadataTabsItemType;
-    default:
-      return undefined;
+export const getTabIcon = (type: string, size?: number) => {
+  if (!type) {
+    console.log('type is null');
+    return <FileIcon />;
   }
-}
 
-export const getCurrentData = (
-  panes: TabsItemType[],
-  activeKey: string
-): TaskDataType | undefined => {
-  const item = getCurrentTab(panes, activeKey);
-  return isDataStudioTabsItemType(item) ? item.params.taskData : undefined;
-};
-
-export const getFooterValue = (panes: any, activeKey: string): Partial<FooterType> => {
-  const currentTab = getCurrentTab(panes, activeKey);
-  return isDataStudioTabsItemType(currentTab)
-    ? {
-        codePosition: [1, 1],
-        codeType: currentTab.subType
-      }
-    : {};
+  switch (type.toLowerCase()) {
+    case DIALECT.JAVA:
+      return <JavaSvg size={size} />;
+    case DIALECT.SCALA:
+      return <ScalaSvg size={size} />;
+    case DIALECT.PYTHON:
+    case DIALECT.PYTHON_LONG:
+      return <PythonSvg size={size} />;
+    case DIALECT.MD:
+    case DIALECT.MDX:
+      return <MarkDownSvg size={size} />;
+    case DIALECT.XML:
+      return <XMLSvg size={size} />;
+    case DIALECT.YAML:
+    case DIALECT.YML:
+      return <YAMLSvg size={size} />;
+    case DIALECT.SH:
+    case DIALECT.BASH:
+    case DIALECT.CMD:
+      return <ShellSvg size={size} />;
+    case DIALECT.LOG:
+      return <LogSvg size={size} />;
+    case DIALECT.FLINKJAR:
+      return <FlinkJarSvg size={size} />;
+    case DIALECT.FLINK_SQL:
+      return <FlinkSQLSvg size={size} />;
+    case DIALECT.FLINKSQLENV:
+      return <FlinkSQLEnvSvg size={size} />;
+    case DIALECT.SQL:
+      return <SQLIcons size={size} />;
+    case DIALECT.MYSQL:
+      return <MysqlIcons size={size} />;
+    case DIALECT.ORACLE:
+      return <OracleIcons size={size} />;
+    case DIALECT.POSTGRESQL:
+      return <PostgresqlIcons size={size} />;
+    case DIALECT.CLICKHOUSE:
+      return <ClickHouseIcons size={size} />;
+    case DIALECT.SQLSERVER:
+      return <SqlServerIcons size={size} />;
+    case DIALECT.DORIS:
+      return <DorisIcons size={size} />;
+    case DIALECT.PHOENIX:
+      return <PhoenixIcons size={size} />;
+    case DIALECT.HIVE:
+      return <HiveIcons size={size} />;
+    case DIALECT.STARROCKS:
+      return <StarRocksIcons size={size} />;
+    case DIALECT.PRESTO:
+      return <PrestoIcons size={size} />;
+    case DIALECT.TERMINAL:
+      return <CodeTwoTone size={size} />;
+    default:
+      return <FileIcon />;
+  }
 };
 
 export const getUserName = (id: Number, users: UserBaseInfo.User[] = []) => {
@@ -332,63 +318,32 @@ export const lockTask = (
   }
 };
 
-/**
- * 断言 断言类型值是否在断言类型值列表中 | assert whether the assertion type value is in the assertion type value list
- * @param needAssertTypeValue
- * @param assertTypeValueList
- * @param needAssertTypeValueLowerCase
- * @param assertType
- */
-export const assert = (
-  needAssertTypeValue: string = '',
-  assertTypeValueList: string[] | string = [],
-  needAssertTypeValueLowerCase = false,
-  assertType: 'notIncludes' | 'includes' | 'notEqual' | 'equal' = 'includes'
-): boolean => {
-  // 如果 needAssertTypeValue 为空, 则直接返回 false 不需要断言 | if needAssertTypeValue is empty, return false directly
-  if (isEmpty(needAssertTypeValue)) {
-    return false;
+export const matchLanguage = (language = DIALECT.FLINK_SQL) => {
+  switch (language.toLowerCase()) {
+    case DIALECT.FLINK_SQL:
+    case DIALECT.FLINKSQLENV:
+    case DIALECT.FLINKJAR:
+      return DIALECT.FLINK_SQL;
+    case DIALECT.SQL:
+    case DIALECT.SQLSERVER:
+    case DIALECT.POSTGRESQL:
+    case DIALECT.HIVE:
+    case DIALECT.CLICKHOUSE:
+    case DIALECT.ORACLE:
+    case DIALECT.DORIS:
+    case DIALECT.PHOENIX:
+    case DIALECT.PRESTO:
+    case DIALECT.MYSQL:
+    case DIALECT.STARROCKS:
+      return DIALECT.SQL;
+    case DIALECT.PYTHON:
+    case DIALECT.PYTHON_LONG:
+      return DIALECT.PYTHON_LONG;
+    case DIALECT.SCALA:
+      return DIALECT.SCALA;
+    case DIALECT.JAVA:
+      return DIALECT.JAVA;
+    default:
+      return DIALECT.SQL;
   }
-  // 判断 assertTypeValueList 是字符串还是数组 | judge whether assertTypeValueList is a string or an array
-  if (!Array.isArray(assertTypeValueList)) {
-    assertTypeValueList = [assertTypeValueList];
-  }
-  // 如果是 assertType 是 notEqual 或 equal, 则 assertTypeValueList 只能有一个值 | if assertType is notEqual or equal, assertTypeValueList can only have one value
-  if (assertType === 'notEqual' || assertType === 'equal') {
-    assertTypeValueList = assertTypeValueList.slice(0, 1);
-  }
-  // 判断需要断言的值是否需要转小写 | determine whether the value to be asserted needs to be converted to lowercase
-  if (needAssertTypeValueLowerCase) {
-    needAssertTypeValue = needAssertTypeValue.toLowerCase();
-    assertTypeValueList = assertTypeValueList.map((item) => item.toLowerCase());
-  }
-  if (assertType === 'notIncludes') {
-    return !assertTypeValueList.includes(needAssertTypeValue);
-  }
-  if (assertType === 'includes') {
-    return assertTypeValueList.includes(needAssertTypeValue);
-  }
-  if (assertType === 'notEqual') {
-    return assertTypeValueList.every((item) => item !== needAssertTypeValue);
-  }
-  if (assertType === 'equal') {
-    return assertTypeValueList.every((item) => item === needAssertTypeValue);
-  }
-  return false;
-};
-
-/**
- * 判断 不为空或者不为 undefined | determine whether it is not empty or not undefined
- * @param value
- */
-export const isNotEmpty = (value: any): boolean => {
-  return value !== '' && value !== undefined && value !== null;
-};
-
-/**
- * 判断为空或者为 undefined | determine whether it is empty or undefined
- * @param value
- */
-export const isEmpty = (value: any): boolean => {
-  return !isNotEmpty(value);
 };

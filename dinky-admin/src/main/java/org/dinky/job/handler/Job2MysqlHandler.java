@@ -180,21 +180,21 @@ public class Job2MysqlHandler extends AbsJobHandler {
         history.setClusterId(clusterId);
         historyService.updateById(history);
 
-        if (GatewayType.LOCAL.equalsValue(job.getJobConfig().getType())) {
+        if (!job.isPipeline()) {
             return true;
         }
 
-        if (Asserts.isNullCollection(job.getJids()) || Asserts.isNullString(job.getJobManagerAddress())) {
-            throw new BusException("The JobID or JobManagerAddress is null. ");
+        if (Asserts.isNullCollection(job.getJids())) {
+            throw new BusException("Job ID retrieval failed, possibly due to timeout of job deployment. "
+                    + "Please modify the system configuration to increase the waiting time for job submission.");
         }
 
-        String jid = job.getJids().get(0);
         JobInstance jobInstance = history.buildJobInstance();
         jobInstance.setHistoryId(job.getId());
         jobInstance.setClusterId(clusterId);
         jobInstance.setTaskId(taskId);
         jobInstance.setName(job.getJobConfig().getJobName());
-        jobInstance.setJid(jid);
+        jobInstance.setJid(job.getJids().get(0));
         jobInstance.setStep(job.getJobConfig().getStep());
         jobInstance.setStatus(JobStatus.INITIALIZING.getValue());
         jobInstanceService.save(jobInstance);
@@ -216,7 +216,8 @@ public class Job2MysqlHandler extends AbsJobHandler {
                                 : null)
                 .build();
         jobHistoryService.save(jobHistory);
-        DaemonTaskConfig taskConfig = DaemonTaskConfig.build(FlinkJobTask.TYPE, jobInstance.getId());
+        DaemonTaskConfig taskConfig =
+                DaemonTaskConfig.build(FlinkJobTask.TYPE, jobInstance.getId(), jobInstance.getTaskId());
         FlinkJobThreadPool.getInstance().execute(DaemonTask.build(taskConfig));
         return true;
     }

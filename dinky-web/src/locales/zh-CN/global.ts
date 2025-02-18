@@ -20,7 +20,7 @@
 export default {
   'button.add': '添加',
   'button.check': '检查',
-  'button.graph': 'DAG',
+  'button.graph': '拓扑图',
   'button.create': '新建',
   'button.recovery': '恢复',
   'button.close': '关闭',
@@ -86,6 +86,8 @@ export default {
   'button.stopRefresh': '停止自动刷新',
   'button.startRefresh': '开始自动刷新(5s/次)',
   'button.autoWrap': '自动换行/不换行',
+  'button.output': '输出',
+  'button.ava': '自动洞察',
 
   'menu.menu': '菜单',
   'right.menu.open': '打开',
@@ -125,6 +127,8 @@ export default {
   'global.stay.tuned': '敬请期待',
   'global.mini': '最小化',
   'global.max': '最大化',
+  'global.blankOpen': '在新窗口打开',
+  'global.float': '浮动',
 
   'global.table.operate': '操作',
   'global.table.updateTime': '更新时间',
@@ -232,5 +236,8 @@ export default {
   'global.job.status.failed-tip': '未成功提交到集群,无法获取任务名称/作业ID',
 
   'global.operation.unable': '无法操作',
-  'global.operation.able': '可以操作'
+  'global.operation.able': '可以操作',
+
+  //WS
+  'global.ws.failed': '连接WebSocket失败'
 };

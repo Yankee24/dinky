@@ -112,6 +112,7 @@ export enum TaskOwnerLockingStrategy {
  * 全局配置所有的 key
  */
 export enum GLOBAL_SETTING_KEYS {
+  SYS_GLOBAL_ISFIRST = 'sys.global.isFirst',
   SYS_FLINK_SETTINGS_USE_REST_API = 'sys.flink.settings.useRestAPI',
   SYS_FLINK_SETTINGS_JOB_ID_WAIT = 'sys.flink.settings.jobIdWait',
   SYS_MAVEN_SETTINGS_SETTINGS_FILE_PATH = 'sys.maven.settings.settingsFilePath',
@@ -146,6 +147,7 @@ export enum GLOBAL_SETTING_KEYS {
   SYS_METRICS_SETTINGS_FLINK_GATHER_TIMING = 'sys.metrics.settings.flink.gatherTiming',
   SYS_METRICS_SETTINGS_FLINK_GATHER_TIMEOUT = 'sys.metrics.settings.flink.gatherTimeout',
   SYS_RESOURCE_SETTINGS_BASE_ENABLE = 'sys.resource.settings.base.enable',
+  SYS_RESOURCE_SETTINGS_BASE_PHYSICAL_DELETION = 'sys.resource.settings.base.physicalDeletion',
   SYS_RESOURCE_SETTINGS_BASE_UPLOAD_BASE_PATH = 'sys.resource.settings.base.upload.base.path',
   SYS_RESOURCE_SETTINGS_BASE_MODEL = 'sys.resource.settings.base.model',
   SYS_RESOURCE_SETTINGS_OSS_ENDPOINT = 'sys.resource.settings.oss.endpoint',

@@ -17,17 +17,17 @@
  *
  */
 
-import LineageGraph from '@/components/LineageGraph';
 import { queryDataByParams } from '@/services/BusinessCrud';
 import { API_CONSTANTS } from '@/services/endpoints';
 import { LineageDetailInfo } from '@/types/DevOps/data';
 import { l } from '@/utils/intl';
-import { connect } from '@umijs/max';
 import { Card, Result } from 'antd';
 import React, { useEffect } from 'react';
-import 'react-lineage-dag/dist/index.css';
+import { Lineage } from '@/pages/DataStudio/Toolbar/Service/Lineage';
+import { useTheme } from '@/hooks/useThemeValue';
+import { DataStudioContext } from '@/pages/DataStudio/DataStudioContext';
 
-const JobLineage: React.FC<connect> = (props) => {
+const JobLineage = (props: { jobDetail: { id: number } }) => {
   const {
     jobDetail: { id: jobInstanceId }
   } = props;
@@ -36,6 +36,9 @@ const JobLineage: React.FC<connect> = (props) => {
     tables: [],
     relations: []
   });
+
+  const theme = useTheme() as 'realDark' | 'light';
+
   const queryLineageData = () => {
     queryDataByParams(API_CONSTANTS.JOB_INSTANCE_GET_LINEAGE, { id: jobInstanceId }).then((res) =>
       setLineageData(res as LineageDetailInfo)
@@ -48,9 +51,15 @@ const JobLineage: React.FC<connect> = (props) => {
 
   return (
     <>
-      <Card hoverable bodyStyle={{ height: '100%' }} style={{ height: parent.innerHeight - 180 }}>
+      <Card
+        hoverable
+        styles={{ body: { height: '100%' } }}
+        style={{ height: parent.innerHeight - 180 }}
+      >
         {lineageData && (lineageData.tables.length !== 0 || lineageData.relations.length !== 0) ? (
-          <LineageGraph lineageData={lineageData} refreshCallBack={queryLineageData} />
+          <DataStudioContext.Provider value={{ theme: theme }}>
+            <Lineage data={lineageData} />
+          </DataStudioContext.Provider>
         ) : (
           <Result style={{ height: '100%' }} status='warning' title={l('lineage.getError')} />
         )}

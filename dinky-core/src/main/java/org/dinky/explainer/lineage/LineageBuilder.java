@@ -20,8 +20,11 @@
 package org.dinky.explainer.lineage;
 
 import org.dinky.data.model.LineageRel;
+import org.dinky.executor.Executor;
+import org.dinky.executor.ExecutorConfig;
 import org.dinky.executor.ExecutorFactory;
 import org.dinky.explainer.Explainer;
+import org.dinky.job.JobConfig;
 import org.dinky.job.JobManager;
 
 import java.util.ArrayList;
@@ -36,9 +39,20 @@ import java.util.Map;
  */
 public class LineageBuilder {
 
-    public static LineageResult getColumnLineageByLogicalPlan(String statement) {
-        Explainer explainer = new Explainer(ExecutorFactory.getDefaultExecutor(), false, new JobManager());
-        List<LineageRel> lineageRelList = explainer.getLineage(statement);
+    public static LineageResult getColumnLineageByLogicalPlan(String statement, JobConfig jobConfig) {
+        Explainer explainer = Explainer.build(JobManager.buildPlanMode(jobConfig));
+        return getColumnLineageByLogicalPlan(explainer.getLineage(statement));
+    }
+
+    public static LineageResult getColumnLineageByLogicalPlan(String statement, ExecutorConfig executorConfig) {
+        JobManager jobManager = JobManager.buildPlanMode(JobConfig.buildPlanConfig());
+        Executor executor = ExecutorFactory.buildExecutor(executorConfig, jobManager.getDinkyClassLoader());
+        jobManager.setExecutor(executor);
+        Explainer explainer = Explainer.build(jobManager);
+        return getColumnLineageByLogicalPlan(explainer.getLineage(statement));
+    }
+
+    public static LineageResult getColumnLineageByLogicalPlan(List<LineageRel> lineageRelList) {
         List<LineageRelation> relations = new ArrayList<>();
         Map<String, LineageTable> tableMap = new HashMap<>();
         int tableIndex = 1;

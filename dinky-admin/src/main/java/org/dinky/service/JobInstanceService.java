@@ -83,7 +83,7 @@ public interface JobInstanceService extends ISuperService<JobInstance> {
      * @param jobInstanceId The ID of the job instance to refresh the job information detail for.
      * @return A {@link JobInfoDetail} object representing the refreshed job information detail.
      */
-    JobInfoDetail refreshJobInfoDetail(Integer jobInstanceId, boolean isForce);
+    JobInfoDetail refreshJobInfoDetail(Integer jobInstanceId, Integer taskId, boolean isForce);
 
     /**
      * Hook the job done for the given job ID and task ID.
@@ -93,6 +93,8 @@ public interface JobInstanceService extends ISuperService<JobInstance> {
      * @return A boolean indicating whether the hooking was successful or not.
      */
     boolean hookJobDone(String jobId, Integer taskId);
+
+    boolean hookJobDoneByHistory(String jobId);
 
     /**
      * Refresh the job instances for the given task IDs.
