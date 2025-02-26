@@ -20,6 +20,7 @@
 package org.dinky.service.task;
 
 import org.dinky.config.Dialect;
+import org.dinky.context.TaskContextHolder;
 import org.dinky.data.annotations.SupportDialect;
 import org.dinky.data.dto.TaskDTO;
 import org.dinky.data.exception.NotSupportExplainExcepition;
@@ -38,6 +39,10 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public abstract class BaseTask {
+
+    private static final Set<Class<?>> taskRegistry =
+            ClassUtil.scanPackageBySuper(BaseTask.class.getPackage().getName(), BaseTask.class);
+
     final TaskDTO task;
 
     public abstract JobResult execute() throws Exception;
@@ -57,13 +62,12 @@ public abstract class BaseTask {
     }
 
     public static BaseTask getTask(TaskDTO taskDTO) {
-        Set<Class<?>> classes =
-                ClassUtil.scanPackageBySuper(BaseTask.class.getPackage().getName(), BaseTask.class);
-        for (Class<?> clazz : classes) {
+        for (Class<?> clazz : taskRegistry) {
             SupportDialect annotation = clazz.getAnnotation(SupportDialect.class);
             if (annotation != null) {
                 for (Dialect dialect : annotation.value()) {
                     if (dialect.isDialect(taskDTO.getDialect())) {
+                        TaskContextHolder.setDialect(dialect);
                         return (BaseTask) ReflectUtil.newInstance(clazz, taskDTO);
                     }
                 }

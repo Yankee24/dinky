@@ -19,34 +19,31 @@
 
 package org.dinky.function.constant;
 
+import org.dinky.data.constant.DirConstant;
+
 import org.apache.flink.table.catalog.FunctionLanguage;
 
 import java.io.File;
 
 import cn.hutool.core.util.StrUtil;
 
-/**
- * 文件路径常量
- *
- * @since 0.6.8
- */
 public class PathConstant {
 
-    /** 基本路径，dinky 部署的路径 */
-    public static final String WORK_DIR = System.getProperty("user.dir");
-    /** tmp路径 */
-    public static final String TMP_PATH = WORK_DIR + File.separator + "tmp" + File.separator;
+    /** Tmp path */
+    public static final String TMP_PATH = DirConstant.getTempRootDir() + File.separator;
 
-    /** udf路径 */
+    /** UDF path */
     public static final String UDF_PATH = TMP_PATH + "udf" + File.separator;
+
+    public static final String TASK_PATH = TMP_PATH + "task";
 
     public static final String COMPILER = "compiler";
     public static final String PACKAGE = "package";
-    /** udf jar规则 */
+    /** UDF jar rules */
     public static final String UDF_JAR_RULE = "udf-\\d+.jar";
-    /** udf版本规则 */
+    /** UDF version rules */
     public static final String UDF_VERSION_RULE = "\\d+";
-    /** udf jar tmp名字 */
+    /**Udf jar tmp name */
     public static final String UDF_JAR_TMP_NAME = "udf-tmp.jar";
 
     public static final String UDF_JAR_NAME = "udf.jar";
@@ -68,7 +65,11 @@ public class PathConstant {
         return getPath(UDF_PATH, COMPILER, language.name());
     }
 
-    public static String getUdfPackagePath(Integer missionId, Object... path) {
-        return getPath(UDF_PATH, missionId, PACKAGE, path);
+    public static String getUdfPackagePath(Integer taskId, Object... path) {
+        return getPath(UDF_PATH, taskId, PACKAGE, path);
+    }
+
+    public static String getTaskUdfPath(Integer taskId) {
+        return getPath(TASK_PATH, taskId, "udf");
     }
 }

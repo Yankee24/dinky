@@ -22,11 +22,11 @@ package org.dinky.job;
 import org.dinky.assertion.Asserts;
 import org.dinky.data.constant.NetConstant;
 import org.dinky.data.enums.GatewayType;
+import org.dinky.data.model.CustomConfig;
 import org.dinky.executor.ExecutorConfig;
 import org.dinky.gateway.config.FlinkConfig;
 import org.dinky.gateway.config.GatewayConfig;
 import org.dinky.gateway.enums.SavePointStrategy;
-import org.dinky.gateway.model.CustomConfig;
 import org.dinky.gateway.model.FlinkClusterConfig;
 
 import org.apache.flink.configuration.Configuration;
@@ -183,6 +183,13 @@ public class JobConfig {
             notes = "Maximum number of rows")
     private Integer maxRowNum;
 
+    @ApiModelProperty(
+            value = "Flag indicating whether to mock sink function",
+            dataType = "boolean",
+            example = "true",
+            notes = "Flag indicating whether to mock sink function")
+    private boolean mockSinkFunction;
+
     @ApiModelProperty(value = "Gateway configuration", dataType = "GatewayConfig", notes = "Gateway configuration")
     private GatewayConfig gatewayConfig;
 
@@ -205,7 +212,9 @@ public class JobConfig {
             if (colonIndex == -1) {
                 this.address = address + NetConstant.COLON + configJson.get(RestOptions.PORT.key());
             } else {
-                this.address = address.replaceAll("(?<=:)\\d{0,6}$", configJson.get(RestOptions.PORT.key()));
+                String port =
+                        configJson.getOrDefault(RestOptions.BIND_PORT.key(), configJson.get(RestOptions.PORT.key()));
+                this.address = address.replaceAll("(?<=:)\\d{0,6}$", port);
             }
         } else {
             this.address = address;
@@ -216,7 +225,7 @@ public class JobConfig {
         Map<String, String> config = new HashMap<>(32);
         if (GatewayType.isDeployCluster(type) && gatewayConfig != null && gatewayConfig.getFlinkConfig() != null) {
             config.putAll(gatewayConfig.getFlinkConfig().getConfiguration());
-        } else {
+        } else if (Asserts.isNotNull(configJson)) {
             config.putAll(configJson);
         }
         return ExecutorConfig.build(
@@ -235,13 +244,15 @@ public class JobConfig {
 
     public void buildGatewayConfig(FlinkClusterConfig config) {
         FlinkConfig flinkConfig = config.getFlinkConfig();
+
         // Prioritize loading custom Flink configuration content in the cluster configuration
         for (CustomConfig customConfig : flinkConfig.getFlinkConfigList()) {
             Assert.notNull(customConfig.getName(), "Custom flink config has null key");
             Assert.notNull(customConfig.getValue(), "Custom flink config has null value");
             flinkConfig.getConfiguration().put(customConfig.getName(), customConfig.getValue());
         }
-        // Load job configuration content afterwards
+
+        // Load job configuration content afterwords
         flinkConfig.getConfiguration().putAll(getConfigJson());
         flinkConfig.getConfiguration().put(CoreOptions.DEFAULT_PARALLELISM.key(), String.valueOf(parallelism));
         flinkConfig.setJobName(getJobName());
@@ -273,5 +284,11 @@ public class JobConfig {
 
     public void buildLocal() {
         type = GatewayType.LOCAL.getLongValue();
+    }
+
+    public static JobConfig buildPlanConfig() {
+        JobConfig jobConfig = new JobConfig();
+        jobConfig.setType(GatewayType.LOCAL.getLongValue());
+        return jobConfig;
     }
 }

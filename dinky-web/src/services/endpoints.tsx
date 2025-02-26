@@ -92,7 +92,7 @@ export enum API_CONSTANTS {
 
   // ------------------------------------ cluster configuration ------------------------------------
   CLUSTER_CONFIGURATION = '/api/clusterConfiguration/list',
-  CLUSTER_CONFIGURATION_LIST_ENABLE_ALL = '/api/clusterConfiguration/listEnabledAll',
+  CLUSTER_CONFIGURATION_LIST_ALL = '/api/clusterConfiguration/listAll',
   CLUSTER_CONFIGURATION_ADD_OR_UPDATE = '/api/clusterConfiguration/saveOrUpdate',
   CLUSTER_CONFIGURATION_DELETE = '/api/clusterConfiguration/delete',
   CLUSTER_CONFIGURATION_ENABLE = '/api/clusterConfiguration/enable',
@@ -110,6 +110,7 @@ export enum API_CONSTANTS {
   DATASOURCE_UN_CACHE_SCHEMA_TABLES = '/api/database/unCacheSchemasAndTables',
   DATASOURCE_LIST_ENABLE_ALL = '/api/database/listEnabledAll',
   DATASOURCE_GET_COLUMNS_BY_TABLE = '/api/database/listColumns',
+  DATASOURCE_GET_TABLE = '/api/database/getTable',
   DATASOURCE_GET_GEN_SQL = '/api/database/getSqlGeneration',
   DATASOURCE_QUERY_DATA = '/api/database/queryData',
 
@@ -175,6 +176,9 @@ export enum API_CONSTANTS {
 
   /** --------------------------------------------  setting center ------------------------------------------------ */
   // ------------------------------------ system settings ------------------------------------
+  GET_NEEDED_CFG = '/api/sysConfig/getNeededCfg',
+  SET_INIT_CFG = '/api/sysConfig/setInitConfig',
+
   SYSTEM_GET_ALL_CONFIG = '/api/sysConfig/getAll',
   SYSTEM_GET_ONE_TYPE_CONFIG = '/api/sysConfig/getConfigByType',
   SYSTEM_MODIFY_CONFIG = '/api/sysConfig/modifyConfig',
@@ -214,6 +218,7 @@ export enum API_CONSTANTS {
   STUDIO_GET_MSSCHEMA_INFO = '/api/studio/getMSSchemaInfo',
   STUDIO_GET_MSCATALOGS = '/api/studio/getMSCatalogs',
   STUDIO_GET_MSCOLUMNS = '/api/studio/getMSColumns',
+  STUDIO_DROP_MSTABLE = '/api/studio/dropMSTable',
 
   // ------------------------------------ savepoints  ------------------------------------
   GET_SAVEPOINT_LIST_BY_TASK_ID = '/api/savepoints/listSavepointsByTaskId',
@@ -224,7 +229,6 @@ export enum API_CONSTANTS {
   ALERT_HISTORY_DELETE = '/api/alertHistory/delete',
 
   // ----------------------------------------- ldap ------------------------------------
-  GET_LDAP_ENABLE = '/api/ldap/ldapEnableStatus',
   LDAP_TEST_CONNECT = '/api/ldap/testConnection',
   LDAP_TEST_LOGIN = '/api/ldap/testLogin',
   LDAP_LIST_USER = '/api/ldap/listUser',
@@ -240,7 +244,6 @@ export enum API_CONSTANTS {
   MONITOR_GET_SYSTEM_DATA = '/api/monitor/getSysData',
   MONITOR_GET_FLINK_DATA = '/api/monitor/getFlinkData',
   MONITOR_GET_LAST_DATA = '/api/monitor/getLastUpdateData',
-  MONITOR_GET_JVM_INFO = '/api/monitor/getJvmInfo',
   METRICS_LAYOUT_GET_BY_NAME = '/api/monitor/getMetricsLayoutByName',
   METRICS_LAYOUT_DELETE = '/api/monitor/deleteMetricsLayout',
   JOB_METRICS = '/api/monitor/jobMetrics',
@@ -264,6 +267,8 @@ export enum API_CONSTANTS {
   SAVE_OR_UPDATE_CATALOGUE_URL = '/api/catalogue/saveOrUpdateCatalogue',
   COPY_TASK_URL = '/api/catalogue/copyTask',
   MOVE_CATALOGUE_URL = '/api/catalogue/moveCatalogue',
+  EXPORT_CATALOGUE_URL = '/api/catalogue/export',
+  IMPORT_CATALOGUE_URL = '/api/catalogue/import',
 
   // ------------------------------------ task ------------------------------------
   TASK = '/api/task',
@@ -279,9 +284,12 @@ export enum API_CONSTANTS {
   CATALOGUE_GET_CATALOGUE_SORT_TYPE_DATA = '/api/catalogue/getCatalogueSortType',
   GET_JOB_VERSION = '/api/task/version',
   RESTART_TASK = '/api/task/restartTask',
+  ROLLBACK_TASK = '/api/task/rollbackTask',
   SAVEPOINT = '/api/task/savepoint',
   RESTART_TASK_FROM_CHECKPOINT = '/api/task/selectSavePointRestartTask',
   LIST_FLINK_SQL_ENV = '/api/task/listFlinkSQLEnv',
+  FLINK_JAR_SQL_CONVERT_FORM = '/api/task/flinkJarSqlConvertForm',
+  FLINK_JAR_FORM_CONVERT_SQL = '/api/task/flinkJarFormConvertSql',
 
   // ------------------------------------ task record ------------------------------------
   HISTORY_LIST = '/api/history/list',
@@ -298,5 +306,16 @@ export enum API_CONSTANTS {
   FLINK_CONF_CONFIG_OPTIONS = '/api/flinkConf/configOptions',
 
   // ------------------------------------ suggestion ------------------------------------
-  SUGGESTION_QUERY_ALL_SUGGESTIONS = '/api/suggestion/queryAllSuggestions'
+  SUGGESTION_QUERY_ALL_SUGGESTIONS = '/api/suggestion/queryAllSuggestions',
+
+  // ------------------------------------ approval ------------------------------------
+  TASK_APPROVAL_CREATE = '/api/approval/createTaskApproval',
+  GET_REVIEWERS = '/api/approval/getReviewers',
+  APPROVAL_SUBMIT = '/api/approval/submit',
+  APPROVAL_REJECT = '/api/approval/reject',
+  APPROVAL_APPROVE = '/api/approval/approve',
+  APPROVAL_WITHDRAW = '/api/approval/withdraw',
+  APPROVAL_CANCEL = '/api/approval/cancel',
+  GET_SUBMITTED_APPROVAL = '/api/approval/getSubmittedApproval',
+  GET_REVIEW_REQUIRED_APPROVAL = '/api/approval/getApprovalToBeReviewed'
 }

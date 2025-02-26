@@ -19,6 +19,8 @@
 
 package org.dinky.service.impl;
 
+import static org.dinky.data.model.SystemConfiguration.FLINK_JOB_ARCHIVE;
+
 import org.dinky.assertion.Asserts;
 import org.dinky.assertion.DinkyAssert;
 import org.dinky.config.Dialect;
@@ -31,6 +33,7 @@ import org.dinky.data.dto.AbstractStatementDTO;
 import org.dinky.data.dto.TaskDTO;
 import org.dinky.data.dto.TaskRollbackVersionDTO;
 import org.dinky.data.dto.TaskSubmitDto;
+import org.dinky.data.enums.CatalogTypeMappingEnum;
 import org.dinky.data.enums.GatewayType;
 import org.dinky.data.enums.JobLifeCycle;
 import org.dinky.data.enums.JobStatus;
@@ -60,7 +63,6 @@ import org.dinky.data.result.SqlExplainResult;
 import org.dinky.explainer.lineage.LineageBuilder;
 import org.dinky.explainer.lineage.LineageResult;
 import org.dinky.explainer.sqllineage.SQLLineageBuilder;
-import org.dinky.function.FunctionFactory;
 import org.dinky.function.compiler.CustomStringJavaCompiler;
 import org.dinky.function.data.model.UDF;
 import org.dinky.function.pool.UdfCodePool;
@@ -85,11 +87,9 @@ import org.dinky.service.JobInstanceService;
 import org.dinky.service.SavepointsService;
 import org.dinky.service.TaskService;
 import org.dinky.service.TaskVersionService;
-import org.dinky.service.UDFService;
 import org.dinky.service.UDFTemplateService;
 import org.dinky.service.UserService;
 import org.dinky.service.catalogue.CatalogueService;
-import org.dinky.service.resource.ResourcesService;
 import org.dinky.service.task.BaseTask;
 import org.dinky.utils.FragmentVariableUtils;
 import org.dinky.utils.JsonUtils;
@@ -106,7 +106,6 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -117,6 +116,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Lazy;
@@ -124,6 +124,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.alibaba.druid.pool.DruidDataSource;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -133,6 +134,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.exceptions.ExceptionUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.tree.Tree;
 import cn.hutool.core.lang.tree.TreeNode;
@@ -162,8 +164,7 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
     private final DataSourceProperties dsProperties;
     private final UserService userService;
     private final ApplicationContext applicationContext;
-    private final UDFService udfService;
-    private final ResourcesService resourcesService;
+    private final DruidDataSource druidProperties;
 
     @Resource
     @Lazy
@@ -199,9 +200,7 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
 
     @ProcessStep(type = ProcessStepType.SUBMIT_EXECUTE)
     public JobResult executeJob(TaskDTO task) throws Exception {
-        JobResult jobResult = BaseTask.getTask(task).execute();
-        log.info("execute job finished,status is {}", jobResult.getStatus());
-        return jobResult;
+        return executeJob(task, false);
     }
 
     @ProcessStep(type = ProcessStepType.SUBMIT_EXECUTE)
@@ -233,10 +232,18 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
             // When disabling checkpoints, delete the checkpoint path
             config.setSavePointPath(null);
         }
+        if (SystemConfiguration.getInstances().getUseFlinkHistoryServer().getValue()) {
+            config.getConfigJson().compute("jobmanager.archive.fs.dir", (k, v) -> {
+                if (StringUtils.isNotBlank(v)) {
+                    return v + "," + FLINK_JOB_ARCHIVE;
+                }
+                return FLINK_JOB_ARCHIVE;
+            });
+        }
         if (GatewayType.get(task.getType()).isDeployCluster()) {
             log.info("Init gateway config, type:{}", task.getType());
             FlinkClusterConfig flinkClusterCfg =
-                    clusterCfgService.getFlinkClusterCfg(config.getClusterConfigurationId());
+                    clusterCfgService.getAndCheckEnableFlinkClusterCfg(config.getClusterConfigurationId());
             flinkClusterCfg.getAppConfig().setUserJarParas(buildParams(config.getTaskId()));
             flinkClusterCfg.getAppConfig().setUserJarMainAppClass(CommonConstant.DINKY_APP_MAIN_CLASS);
             config.buildGatewayConfig(flinkClusterCfg);
@@ -347,8 +354,6 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
     public JobResult debugTask(TaskDTO task) throws Exception {
         // Debug mode need return result
         task.setUseResult(true);
-        // Debug mode need execute
-        task.setStatementSet(false);
         // mode check
         if (GatewayType.get(task.getType()).isDeployCluster()) {
             throw new BusException(Status.MODE_IS_NOT_ALLOW_SELECT.getMessage());
@@ -401,7 +406,8 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
                 }
                 int count = 0;
                 while (true) {
-                    JobInfoDetail jobInfoDetail = jobInstanceService.refreshJobInfoDetail(jobInstance.getId(), false);
+                    JobInfoDetail jobInfoDetail = jobInstanceService.refreshJobInfoDetail(
+                            jobInstance.getId(), jobInstance.getTaskId(), false);
                     if (JobStatus.isDone(jobInfoDetail.getInstance().getStatus())) {
                         log.info(
                                 "JobInstance [{}] status is [{}], ready to submit Job",
@@ -460,7 +466,7 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
             log.warn("Stop with savePoint failed: {}, will try normal rest api stop", e.getMessage());
             isSuccess = jobManager.cancelNormal(jobInstance.getJid());
         }
-        jobInstanceService.refreshJobInfoDetail(jobInstance.getId(), true);
+        jobInstanceService.refreshJobInfoDetail(jobInstance.getId(), jobInstance.getTaskId(), true);
         return isSuccess;
     }
 
@@ -563,7 +569,7 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
         Integer tenantId = baseMapper.getTenantByTaskId(id);
         Asserts.checkNull(tenantId, Status.TASK_NOT_EXIST.getMessage());
         TenantContextHolder.set(tenantId);
-        log.info("Init task tenan finished..");
+        log.info("Init task tenant finished..");
     }
 
     @Override
@@ -576,15 +582,15 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
             task.setVersionId(taskVersionId);
             if (Dialect.isUDF(task.getDialect())) {
                 // compile udf class
-                UDF udf = UDFUtils.taskToUDF(task.buildTask());
                 try {
-                    FunctionFactory.initUDF(Collections.singletonList(udf), task.getId());
+                    UDF udf = UDFUtils.taskToUDF(task.buildTask());
+                    UdfCodePool.addOrUpdate(udf);
                 } catch (Throwable e) {
                     throw new BusException(
                             "UDF compilation failed and cannot be published. The error message is as follows:"
-                                    + e.getMessage());
+                                    + ExceptionUtil.stacktraceToOneLineString(e),
+                            e);
                 }
-                UdfCodePool.addOrUpdate(udf);
             }
         } else {
             if (Dialect.isUDF(task.getDialect())
@@ -599,7 +605,8 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
             if (Asserts.isNotNull(jobInstance)) {
                 jobInstance.setStep(lifeCycle.getValue());
                 boolean updatedJobInstance = jobInstanceService.updateById(jobInstance);
-                if (updatedJobInstance) jobInstanceService.refreshJobInfoDetail(jobInstance.getId(), true);
+                if (updatedJobInstance)
+                    jobInstanceService.refreshJobInfoDetail(jobInstance.getId(), jobInstance.getTaskId(), true);
                 log.warn(
                         "JobInstance [{}] step change to [{}] ,Trigger Force Refresh",
                         jobInstance.getName(),
@@ -677,19 +684,7 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
 
         Task defaultFlinkSQLEnvTask = getTaskByNameAndTenantId(name, tenantId);
 
-        String sql = String.format(
-                "create catalog my_catalog with(\n    "
-                        + "'type' = 'dinky_mysql',\n"
-                        + "    'username' = "
-                        + "'%s',\n    "
-                        + "'password' = '%s',\n"
-                        + "    'url' = '%s'\n"
-                        + ")%suse catalog my_catalog%s",
-                dsProperties.getUsername(),
-                dsProperties.getPassword(),
-                dsProperties.getUrl(),
-                FlinkSQLConstant.SEPARATOR,
-                FlinkSQLConstant.SEPARATOR);
+        String sql = getStatementByCatalogType(CatalogTypeMappingEnum.ofDbType(druidProperties.getDbType()));
 
         if (null != defaultFlinkSQLEnvTask) {
             defaultFlinkSQLEnvTask.setStatement(sql);
@@ -710,6 +705,31 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
         saveOrUpdate(defaultFlinkSQLEnvTask);
 
         return defaultFlinkSQLEnvTask;
+    }
+
+    private @NotNull String getStatementByCatalogType(CatalogTypeMappingEnum catalogTypeMappingEnum) {
+        String sql = String.format(
+                "create catalog my_catalog_%s with(\n    "
+                        + "'type' = '%s',\n"
+                        + "    'username' = "
+                        + "'%s',\n    "
+                        + "'password' = '%s',\n"
+                        + "    'url' = '%s'\n"
+                        + ")%suse catalog my_catalog_%s %s",
+                catalogTypeMappingEnum.getCatalogTypeName(),
+                catalogTypeMappingEnum.getCatalogTypeName(),
+                dsProperties.getUsername(),
+                dsProperties.getPassword(),
+                dsProperties.getUrl(),
+                FlinkSQLConstant.SEPARATOR,
+                catalogTypeMappingEnum.getCatalogTypeName(),
+                FlinkSQLConstant.SEPARATOR);
+        log.debug(
+                "Init default flink sql env sql:{}, yours dbType is:{}, catalogName is:{}",
+                sql,
+                catalogTypeMappingEnum.getDbType(),
+                catalogTypeMappingEnum.getCatalogTypeName());
+        return sql;
     }
 
     @Override
@@ -770,7 +790,8 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
 
     @Override
     public Integer queryAllSizeByName(String name) {
-        return baseMapper.queryAllSizeByName(name);
+        Long value = baseMapper.selectCount(new LambdaQueryWrapper<Task>().likeRight(Task::getName, name + "-"));
+        return Math.toIntExact(value);
     }
 
     @Override
@@ -976,7 +997,7 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
     @Override
     public LineageResult getTaskLineage(Integer id) {
         TaskDTO task = getTaskInfoById(id);
-        if (!Dialect.isCommonSql(task.getDialect())) {
+        if (Dialect.isCommonSql(task.getDialect())) {
             if (Asserts.isNull(task.getDatabaseId())) {
                 return null;
             }
@@ -991,7 +1012,9 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
                         task.getStatement(), task.getDialect().toLowerCase(), dataBase.getDriverConfig());
             }
         } else {
-            return LineageBuilder.getColumnLineageByLogicalPlan(buildEnvSql(task));
+            task.setStatement(buildEnvSql(task) + task.getStatement());
+            JobConfig jobConfig = task.getJobConfig();
+            return LineageBuilder.getColumnLineageByLogicalPlan(task.getStatement(), jobConfig);
         }
     }
 
@@ -1039,16 +1062,19 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
                 }
             }
         });
-
-        LambdaQueryWrapper<JobInstance> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(JobInstance::getId, tskMap.keySet());
-        jobInstanceService.getBaseMapper().selectList(wrapper, resultContext -> {
-            JobInstance jobInstance = resultContext.getResultObject();
-            TaskDTO taskDTO = tskMap.get(jobInstance.getId());
-            if (Objects.nonNull(taskDTO)) {
-                taskDTO.setStatus(jobInstance.getStatus());
-            }
-        });
+        // When the postgre data source query in () is empty, a syntax error will be reported, so it is necessary to
+        // judge
+        if (!tskMap.keySet().isEmpty()) {
+            LambdaQueryWrapper<JobInstance> wrapper = new LambdaQueryWrapper<>();
+            wrapper.in(JobInstance::getId, tskMap.keySet());
+            jobInstanceService.getBaseMapper().selectList(wrapper, resultContext -> {
+                JobInstance jobInstance = resultContext.getResultObject();
+                TaskDTO taskDTO = tskMap.get(jobInstance.getId());
+                if (Objects.nonNull(taskDTO)) {
+                    taskDTO.setStatus(jobInstance.getStatus());
+                }
+            });
+        }
 
         List<TaskDTO> tasks = new ArrayList<>(tskMap.values());
         // 按照step排序，发布>开发>,相同情况 下按照状态排序
@@ -1077,10 +1103,10 @@ public class TaskServiceImpl extends SuperServiceImpl<TaskMapper, Task> implemen
     private Boolean hasTaskOperatePermission(Integer firstLevelOwner, List<Integer> secondLevelOwners) {
         boolean isFirstLevelOwner = firstLevelOwner != null && firstLevelOwner == StpUtil.getLoginIdAsInt();
         if (TaskOwnerLockStrategyEnum.OWNER.equals(
-                SystemConfiguration.getInstances().getTaskOwnerLockStrategy())) {
+                SystemConfiguration.getInstances().getTaskOwnerLockStrategy().getValue())) {
             return isFirstLevelOwner;
         } else if (TaskOwnerLockStrategyEnum.OWNER_AND_MAINTAINER.equals(
-                SystemConfiguration.getInstances().getTaskOwnerLockStrategy())) {
+                SystemConfiguration.getInstances().getTaskOwnerLockStrategy().getValue())) {
             return isFirstLevelOwner
                     || (secondLevelOwners != null && secondLevelOwners.contains(StpUtil.getLoginIdAsInt()));
         }

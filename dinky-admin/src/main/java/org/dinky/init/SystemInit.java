@@ -20,7 +20,6 @@
 package org.dinky.init;
 
 import org.dinky.assertion.Asserts;
-import org.dinky.context.SseSessionContextHolder;
 import org.dinky.context.TenantContextHolder;
 import org.dinky.daemon.pool.FlinkJobThreadPool;
 import org.dinky.daemon.pool.ScheduleThreadPool;
@@ -32,6 +31,7 @@ import org.dinky.data.model.SystemConfiguration;
 import org.dinky.data.model.Task;
 import org.dinky.data.model.job.JobInstance;
 import org.dinky.data.model.rbac.Tenant;
+import org.dinky.function.FlinkUDFDiscover;
 import org.dinky.function.constant.PathConstant;
 import org.dinky.function.pool.UdfCodePool;
 import org.dinky.job.ClearJobHistoryTask;
@@ -49,8 +49,7 @@ import org.dinky.url.RsURLStreamHandlerFactory;
 import org.dinky.utils.JsonUtils;
 import org.dinky.utils.UDFUtils;
 
-import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
-
+import java.net.URL;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -95,24 +94,37 @@ public class SystemInit implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        TenantContextHolder.ignoreTenant();
-        initResources();
-        List<Tenant> tenants = tenantService.list();
-        sysConfigService.initSysConfig();
-        sysConfigService.initExpressionVariables();
+        try {
+            TenantContextHolder.ignoreTenant();
+            initResources();
+            List<Tenant> tenants = tenantService.list();
+            sysConfigService.initSysConfig();
+            sysConfigService.initExpressionVariables();
 
-        for (Tenant tenant : tenants) {
-            taskService.initDefaultFlinkSQLEnv(tenant.getId());
+            for (Tenant tenant : tenants) {
+                taskService.initDefaultFlinkSQLEnv(tenant.getId());
+            }
+            initDaemon();
+            initDolphinScheduler();
+            registerUDF();
+            discoverUDF();
+            updateGitBuildState();
+            registerURL();
+        } catch (NoClassDefFoundError e) {
+            if (e.getMessage().contains("org/apache/flink")) {
+                log.error(
+                        "No Flink Jar dependency detected, please put the Flink Jar dependency into the DInky program first. (未检测到有 Flink Jar依赖，请先放入 Flink Jar 依赖到 DInky程序里)",
+                        e);
+            } else {
+                log.error("", e);
+            }
         }
-        initDaemon();
-        initDolphinScheduler();
-        registerUDF();
-        updateGitBuildState();
-        registerURL();
     }
 
     private void registerURL() {
-        TomcatURLStreamHandlerFactory.getInstance().addUserFactory(new RsURLStreamHandlerFactory());
+        URL.setURLStreamHandlerFactory(new RsURLStreamHandlerFactory());
+        // todo 校验
+        //        TomcatURLStreamHandlerFactory.getInstance().addUserFactory(new RsURLStreamHandlerFactory());
     }
 
     private void initResources() {
@@ -152,11 +164,11 @@ public class SystemInit implements ApplicationRunner {
         List<JobInstance> jobInstances = jobInstanceService.listJobInstanceActive();
         FlinkJobThreadPool flinkJobThreadPool = FlinkJobThreadPool.getInstance();
         for (JobInstance jobInstance : jobInstances) {
-            DaemonTaskConfig config = new DaemonTaskConfig(FlinkJobTask.TYPE, jobInstance.getId());
+            DaemonTaskConfig config =
+                    DaemonTaskConfig.build(FlinkJobTask.TYPE, jobInstance.getId(), jobInstance.getTaskId());
             DaemonTask daemonTask = DaemonTask.build(config);
             flinkJobThreadPool.execute(daemonTask);
         }
-        SseSessionContextHolder.init(schedule);
     }
 
     /**
@@ -208,6 +220,10 @@ public class SystemInit implements ApplicationRunner {
             UdfCodePool.registerPool(allUDF.stream().map(UDFUtils::taskToUDF).collect(Collectors.toList()));
         }
         UdfCodePool.updateGitPool(gitProjectService.getGitPool());
+    }
+
+    public void discoverUDF() {
+        FlinkUDFDiscover.getCustomStaticUDFs();
     }
 
     public void updateGitBuildState() {

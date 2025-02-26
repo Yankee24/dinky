@@ -12,7 +12,7 @@
 
 ## 简介
 
-Dinky 是一个基于 `Apache Flink` 的实时数据开发平台，实现了敏捷的数据开发、部署和运维。
+以 Apache Flink 为内核构建的开源实时计算平台，具备实时应用的作业开发、数据调试及运行监控能力，助力实时计算高效应用。
 
 ## 功能
 
@@ -20,7 +20,7 @@ Dinky 是一个基于 `Apache Flink` 的实时数据开发平台，实现了敏�
 
 - FlinkSQL 数据开发：提示补全、语句美化、在线调试、逻辑校验、执行计划、Catalog、血缘分析、版本对比等
 - 支持 FlinkSQL 多版本开发及多种执行模式：Local、Standalone、Yarn/Kubernetes Session、Yarn Per-Job、Yarn/Kubernetes Application
-- 支持 Apache Flink 生态：CDC、Connector、FlinkCEP、FlinkCDC、Paimon、PyFlink 等
+- 支持 Apache Flink 生态：FlinkCDC、Connector、FlinkCEP、Paimon、PyFlink 等
 - 支持 FlinkSQL 语法增强：整库同步、执行环境、全局变量、表值聚合、加载依赖、行级权限、执行Jar任务等
 - 支持 FlinkCDC 整库实时入仓入湖与 FlinkCDCPipeline 整库同步
 - 支持实时在线调试预览 Table、ChangeLog 和 UDF
@@ -38,27 +38,25 @@ Dinky 是一个基于 `Apache Flink` 的实时数据开发平台，实现了敏�
 
 ## 运行效果
 
-> FlinkSQL Studio
+> 数据开发
 
-![datastudio](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1/datastudio.png)
+![datastudio](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1-2/datastudio.png)
 
-> 语法检查
+> 数据调试
 
-![checksql](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1/checksql.png)
+![datadebug](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1-2/data-debug.png)
 
-> 版本管理
+> 作业监控
 
-![versiondiff](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1/versiondiff.png)
+![devops](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1-2/devops.png)
 
-> 血缘分析
+> 作业指标
 
-![lineage](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1/lineage.png)
-
-> 任务监控
-
-![monitor](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1/monitor.png)
+![metrics](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1-2/metrics.png)
 
 ## 参与贡献
+
+dev 分支为 Dinky 1.3.0, 1.2 分支为 Dinky 1.2.2。
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/DataLinkDC/dinky/pulls)
 
@@ -70,7 +68,7 @@ Dinky 是一个基于 `Apache Flink` 的实时数据开发平台，实现了敏�
 
 ## 如何部署
 
-详见 [源码编译](https://github.com/DataLinkDC/dinky/blob/dev/docs/docs/deploy_guide/compile.mdx) 和 [安装部署](https://github.com/DataLinkDC/dinky/blob/dev/docs/docs/deploy_guide/deploy.mdx) 。
+详见 [源码编译](https://github.com/DataLinkDC/dinky/blob/dev/docs/docs/deploy_guide/compile_deploy.md) 和 [安装部署](https://github.com/DataLinkDC/dinky/blob/dev/docs/docs/deploy_guide/normal_deploy.mdx) 。
 
 ## 感谢
 
@@ -80,9 +78,9 @@ Dinky 是一个基于 `Apache Flink` 的实时数据开发平台，实现了敏�
 
 [Apache Flink](https://github.com/apache/flink)
 
-[FlinkCDC](https://github.com/ververica/flink-cdc-connectors)
+[Apache FlinkCDC](https://github.com/apache/flink-cdc)
 
-[Apache Paimon](https://github.com/apache/incubator-paimon)
+[Apache Paimon](https://github.com/apache/paimon)
 
 [Apache Dolphinscheduler](https://github.com/apache/dolphinscheduler)
 
@@ -110,13 +108,9 @@ Dinky 是一个基于 `Apache Flink` 的实时数据开发平台，实现了敏�
 
 2.访问 [官网](http://www.dinky.org.cn/#/) 网址，阅读最新文档手册
 
-3.推荐扫码进入钉钉群
+3.进入微信用户社区群（推荐，添加微信号 `wenmo_ai` 邀请进群）和 QQ 用户社区群（**543709668**）交流，必须申请备注 “Dinky + 企业名 + 职位”，
 
-<img src="https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/main/dinkydingding.jpg" alt="dinkydingding" style="zoom:30%;" />
-
-4.进入微信用户社区群（推荐，添加微信号 `wenmo_ai` 邀请进群）和 QQ 用户社区群（**543709668**）交流，必须申请备注 “Dinky + 企业名 + 职位”，
-
-5.关注微信公众号获取官方最新文章：[Dinky 开源](https://mmbiz.qpic.cn/mmbiz_jpg/dyicwnSlTFTp6w4PuJruFaLV6uShCJDkzqwtnbQJrQ90yKDuuIC8tyMU5DK69XZibibx7EPPBRQ3ic81se5UQYs21g/0?wx_fmt=jpeg)
+4.关注微信公众号获取官方最新文章：[Dinky 开源](https://mmbiz.qpic.cn/mmbiz_jpg/dyicwnSlTFTp6w4PuJruFaLV6uShCJDkzqwtnbQJrQ90yKDuuIC8tyMU5DK69XZibibx7EPPBRQ3ic81se5UQYs21g/0?wx_fmt=jpeg)
 
 ## 版权
 

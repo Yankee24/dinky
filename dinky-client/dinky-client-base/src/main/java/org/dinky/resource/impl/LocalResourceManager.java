@@ -24,15 +24,20 @@ import org.dinky.data.exception.BusException;
 import org.dinky.data.model.ResourcesVO;
 import org.dinky.resource.BaseResourceManager;
 
+import org.apache.flink.core.fs.FileSystem;
+import org.apache.flink.core.fs.local.LocalFileSystem;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -49,10 +54,10 @@ public class LocalResourceManager implements BaseResourceManager {
         try {
             boolean isSuccess = FileUtil.del(getFilePath(path));
             if (!isSuccess) {
-                throw new BusException("remove file failed,reason unknown");
+                throw BusException.of(Status.RESOURCE_FILE_DELETE_FAILED, "unknown");
             }
         } catch (IORuntimeException e) {
-            throw new BusException(Status.RESOURCE_FILE_DELETE_FAILED, e);
+            throw BusException.of(e, Status.RESOURCE_FILE_DELETE_FAILED);
         }
     }
 
@@ -62,7 +67,7 @@ public class LocalResourceManager implements BaseResourceManager {
             String newName = FileUtil.getName(newPath);
             FileUtil.rename(new File(getFilePath(path)), newName, true);
         } catch (Exception e) {
-            throw new BusException(Status.RESOURCE_FILE_RENAME_FAILED, e);
+            throw BusException.of(e, Status.RESOURCE_FILE_RENAME_FAILED);
         }
     }
 
@@ -71,7 +76,7 @@ public class LocalResourceManager implements BaseResourceManager {
         try {
             FileUtil.writeFromStream(fileStream, getFilePath(path));
         } catch (Exception e) {
-            throw new BusException(Status.RESOURCE_FILE_UPLOAD_FAILED, e);
+            throw BusException.of(e, Status.RESOURCE_FILE_UPLOAD_FAILED);
         }
     }
 
@@ -89,6 +94,7 @@ public class LocalResourceManager implements BaseResourceManager {
     @Override
     public List<ResourcesVO> getFullDirectoryStructure(int rootId) {
         String basePath = FileUtil.file(getBasePath()).getPath();
+        String systemSeparator = Pattern.quote(FileSystems.getDefault().getSeparator());
 
         try (Stream<Path> paths = Files.walk(Paths.get(basePath))) {
             return paths.map(path -> {
@@ -109,7 +115,7 @@ public class LocalResourceManager implements BaseResourceManager {
                         return ResourcesVO.builder()
                                 .id(self.hashCode())
                                 .pid(parentId)
-                                .fullName(self)
+                                .fullName(self.replaceAll(systemSeparator, "/"))
                                 .fileName(file.getName())
                                 .isDirectory(file.isDirectory())
                                 .type(0)
@@ -119,12 +125,17 @@ public class LocalResourceManager implements BaseResourceManager {
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         } catch (IOException e) {
-            throw new BusException(Status.RESOURCE_FILE_PATH_VISIT_FAILED, e);
+            throw BusException.of(e, Status.RESOURCE_FILE_PATH_VISIT_FAILED);
         }
     }
 
     @Override
     public InputStream readFile(String path) {
         return FileUtil.getInputStream(getFilePath(path));
+    }
+
+    @Override
+    public FileSystem getFileSystem() {
+        return LocalFileSystem.getSharedInstance();
     }
 }

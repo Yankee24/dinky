@@ -152,6 +152,24 @@ export default {
   'datastudio.project.delete.job': 'Delete [{type}] Job [{name}]',
   'datastudio.project.delete.job.confirm':
     'This operation will delete the execution history of the task and all information of the task. \nPlease operate with caution! This operation is irreversible!!!  \n\t\t\t\tConfirm to delete?',
+  'datastudio.project.import.title': 'Import json file',
+  'datastudio.project.import.tip': 'Click or drag file to this area to upload',
+  'datastudio.sqlTask.flinkJar.tip':
+    'The code editor on the left is the FlinkSql pre-statement, and the current form item is the EXECUTE JAR WITH syntax',
+  'datastudio.sqlTask.flinkJar.uri': 'Program path',
+  'datastudio.sqlTask.flinkJar.manualInput': 'Manual input',
+  'datastudio.sqlTask.flinkJar.uri.tip': 'Please enter the path to run the program (uri)',
+  'datastudio.sqlTask.flinkJar.mainClass': 'Program running class (mainClass)',
+  'datastudio.sqlTask.flinkJar.mainClass.tip':
+    'Please enter the running program running class (mainClass)',
+  'datastudio.sqlTask.flinkJar.args': 'Program running parameters (args)',
+  'datastudio.sqlTask.flinkJar.args.tip': 'Please enter the program running parameters (args)',
+  'datastudio.sqlTask.flinkJar.allowNonRestoredState':
+    'Ignore undeclared state (allowNonRestoredState)',
+  'datastudio.catalog.delete.table': 'Drop [{catalog}.{database}.{table}]',
+  'datastudio.catalog.delete.table.confirm':
+    'Drop statement will be called to delete the table. \nPlease operate with caution! This operation is irreversible!!!  \n\t\t\t\tConfirm to delete?',
+
   /**
    *
    * devops
@@ -270,6 +288,82 @@ export default {
   'home.mywork': 'My Task',
   'home.allwork': 'All Task',
   'home.task.not.desc': 'No mission statement at this time',
+  'home.task.not.instance':
+    'This task has not been run before, so we cannot go to the [Devops] to view task details. Please run this task first',
+  'home.task.update.at': 'Updated At: {time}',
+  'home.job.stream': 'Stream Job',
+  'home.job.batch': 'Batch Job',
+  'home.header.tips.morning.1': 'Good morning, {user}, A new day, new code, new challenges',
+  'home.header.tips.morning.2':
+    'good morning, {user}, The morning sunshine brings a new beginning, come on!',
+  'home.header.tips.morning.3':
+    'Good morning, {user}, programmer! May your bugs dissipate like morning mist.',
+  'home.header.tips.morning.4':
+    'Good morning, {user}, a new day, new ideas, looking forward to your burst of inspiration.',
+  'home.header.tips.morning.5':
+    'Good morning, {user}, The morning coffee is ready and it`s time to start working.',
+  'home.header.tips.morning.6':
+    'Good morning, {user}, may your morning be like a cup of hot tea, warm and comfortable.',
+  'home.header.tips.morning.7':
+    'Good morning, {user}, remember to smile, it will make your day even better.',
+  'home.header.tips.morning.8':
+    'Good morning, {user}, stay positive, something wonderful is about to happen.',
+  'home.header.tips.morning.9':
+    'Good morning, {user}, May your programming journey be filled with discovery and innovation.',
+  'home.header.tips.morning.10': 'Good morning, {user}, may your code be as fresh as morning dew.',
+  'home.header.tips.forenoon.1':
+    'Good morning, {user}, may your code be as bright as the morning sun.',
+  'home.header.tips.forenoon.2':
+    'Good morning, {user}, are you tired from coding this morning? Take a break and continue to work hard.',
+  'home.header.tips.forenoon.3':
+    'Good morning, {user}, the sunshine this morning is just right, illuminating your workbench.',
+  'home.header.tips.forenoon.4':
+    'Good morning, {user}, enjoy your morning work. Every task is worth giving your all.',
+  'home.header.tips.forenoon.5':
+    'Good morning, {user}, May your code be as refreshing as morning coffee.',
+  'home.header.tips.forenoon.6':
+    'Good morning, {user}, may your code be as vast as the morning sky.',
+  'home.header.tips.noon.1':
+    'Good afternoon, {user}, Lunch time, give yourself a chance to rest and recharge.',
+  'home.header.tips.noon.2':
+    'Good afternoon, {user}, The sunshine at noon reminds us that it`s time to slow down and enjoy a moment of tranquility.',
+  'home.header.tips.noon.3':
+    'Good afternoon, {user}, A brief break at noon can make your afternoon more energetic',
+  'home.header.tips.noon.4':
+    'Good afternoon, {user}, The sunshine at noon is a warm embrace throughout the day.',
+  'home.header.tips.noon.5':
+    'Good afternoon, {user}, A sumptuous lunch is the best reward for your hard work.',
+  'home.header.tips.afternoon.1':
+    'Good afternoon, {user}, The afternoon work has begun. Stay enthusiastic and focused.',
+  'home.header.tips.afternoon.2':
+    'Good afternoon, {user}, The gentle sunshine in the afternoon is suitable for thinking or meditation, to find inner peace.',
+  'home.header.tips.afternoon.3':
+    'Good afternoon, {user}, The gentle breeze of the afternoon brings fresh air. May your mood be so fresh as well.',
+  'home.header.tips.afternoon.4':
+    'Good afternoon, {user}, don`t forget to give yourself some sweet treats during this busy afternoon! (✿✪‿✪｡)',
+  'home.header.tips.afternoon.5':
+    'Good afternoon, {user}, the gentle breeze of the afternoon, may your mood be as relaxed as it is. (✧∀✧)',
+  'home.header.tips.evening.1':
+    'Good evening, {user}, the busy day is over, let`s relax and unwind! (✿✪‿✪｡)',
+  'home.header.tips.evening.2':
+    'Good evening, {user}, the evening glow. May your mood be as brilliant as it is. (✧∇✧)',
+  'home.header.tips.evening.3':
+    'Good evening, {user}, enjoy the tranquility of the evening and let the busyness of the day slowly settle. (✧◡◡✧)',
+  'home.header.tips.evening.4':
+    'Good evening, {user}, In the evening sky, stars are starting to twinkle. May your dreams also light up with them. (✧✧✧)',
+  'home.header.tips.evening.5':
+    'Good evening, {user}, may your code shine like the stars in the evening.',
+  'home.header.tips.lateNight.1':
+    'Good night, {user}, The tranquility of late night, may you have a peaceful and beautiful night. (✿ ✉ ✿)',
+  'home.header.tips.lateNight.2':
+    'Good night, {user}, The starry sky at night brings infinite inspiration to your thinking.',
+  'home.header.tips.lateNight.3':
+    'Good night, {user}, The starry sky at night reminds us of the vastness of the universe and the possibilities of thinking.',
+  'home.header.tips.lateNight.4':
+    'Good night, {user}, late night work. May your focus and persistence bring results.',
+  'home.header.tips.lateNight.5':
+    'Good night, {user}, May your code be as profound as the thoughts of late night.',
+
   /**
    *
    * layouts
@@ -371,8 +465,8 @@ export default {
   'pages.datastudio.editor.debug.success': 'Search succeeded',
   'pages.datastudio.editor.execute.warn':
     'The execution mode of this task is [{type}], which does not support SQL query, please save it manually and use the button on the right - job submission',
-  'pages.datastudio.editor.explan': 'Get the current FlinkSql execution graph',
-  'pages.datastudio.editor.explan.tip': 'JobPlan for FlinkSQL',
+  'pages.datastudio.editor.explain': 'Get the current FlinkSql execution graph',
+  'pages.datastudio.editor.explain.tip': 'JobPlan for FlinkSQL',
   'pages.datastudio.editor.stop': 'Stop',
   'pages.datastudio.editor.stop.job': 'Stop job',
   'pages.datastudio.editor.stop.jobConfirm': 'Are you sure to stop the job [{jobName}]? ',
@@ -430,16 +524,19 @@ export default {
   'pages.datastudio.label.execConfig.selectDatabase.tip': 'Select the database to be used',
   'pages.datastudio.label.execConfig.maxrow': 'Maximum number of rows',
   'pages.datastudio.label.execConfig.maxrow.tip': 'The maximum number of rows of preview data',
+  'pages.datastudio.label.execConfig.mocksink': 'SinkMock',
+  'pages.datastudio.label.execConfig.mocksink.tip':
+    'Mock the SinkFunction, result will not be written to the production environment during debugging, but can preview through dinky',
   'pages.datastudio.label.jobConfig': 'Job Config',
   'pages.datastudio.label.jobConfig.addConfig': 'Add Config item',
   'pages.datastudio.label.jobConfig.addConfig.params': 'parameters',
   'pages.datastudio.label.jobConfig.addConfig.value': 'value',
-  'pages.datastudio.label.udf': 'Udf Item',
+  'pages.datastudio.label.udf': 'Refer Udf',
   'pages.datastudio.label.udf.tip':
-    'Inject UDF item, Automatically add statement `create temporary function [functionName] as [className]` at the beginning of the SQL statement',
+    'Refer UDF. Automatically add statement `create temporary function [functionName] as [className]` at the beginning of the SQL statement',
   'pages.datastudio.label.udf.duplicate.tip':
-    'The class [className] selected this time already exists and duplicate injection is not allowed. Please reselect or cancel injection (delete and change line).',
-  'pages.datastudio.label.udf.injectUdf': 'Inject UDF item',
+    'The class [className] selected this time already exists and duplicate reference is not allowed. Please reselect or cancel reference (delete and change line).',
+  'pages.datastudio.label.udf.injectUdf': 'Refer UDF',
   'pages.datastudio.label.udf.name': 'function name',
   'pages.datastudio.label.udf.className': 'class name',
   'pages.datastudio.label.jobConfig.alertGroup': 'Alarm Group',
@@ -485,13 +582,16 @@ export default {
   'pages.datastudio.label.jobInfo.versionId': 'Version number',
   'pages.datastudio.label.jobInfo.firstLevelOwner': 'Owner',
   'pages.datastudio.label.jobInfo.secondLevelOwners': 'Maintainer',
+  'pages.datastudio.label.jobInfo.className': 'ClassName',
   'pages.datastudio.label.result.query.latest.data': 'Get the latest data',
   'pages.datastudio.label.result.query.latest.data.truncate':
     'The data is too long to be displayed in full',
   'pages.datastudio.label.version': 'Version History',
   'pages.datastudio.label.version.diff': 'Version Diff',
-  'pages.datastudio.label.version.leftTitle': 'Version number',
-  'pages.datastudio.label.version.rightTitle': 'Version number',
+  'pages.datastudio.label.version.leftTitle':
+    'Version number: {versionId} Creation time: {createTime}',
+  'pages.datastudio.label.version.rightTitle':
+    'Version: [Current Edited Version] Update Time: [{updateTime}]',
   'pages.datastudio.label.version.rollback': 'Rollback',
   'pages.datastudio.label.version.rollback.flinksql': 'Rollback Flink SQL Version',
   'pages.datastudio.label.version.rollback.flinksqlConfirm':
@@ -535,6 +635,12 @@ export default {
   'pages.datastudio.label.history.clusterInstance': 'Cluster Instance',
   'pages.datastudio.label.history.clusterConfig': 'Cluster Config',
   'pages.datastudio.label.history.local': 'Local (Built-in MiniCluster)',
+
+  'pages.datastudio.label.lastUpdateDes': 'Recently saved',
+  'pages.datastudio.label.lastUpdateJust': 'Newly',
+  'pages.datastudio.label.lastUpdateMinutesAgo': 'Minutes Ago',
+  'pages.datastudio.label.lastUpdateHoursAgo': 'Hours Ago',
+
   /**
    *
    * rc
@@ -820,7 +926,7 @@ export default {
   'rc.ci.killConfirm':
     'Are you sure to stop this Flink Cluster instance?  Please note that after stopping, it will not be recovered! The associated task will affect, please be careful!',
   'rc.ci.kill': 'Stop Flink Cluster Instance',
-  'rc.ci.jma': 'JobManager Address',
+  'rc.ci.jma': 'JM Address',
   'rc.ci.jmha': 'JobManager HA Address',
   'rc.ci.jmha.tips':
     'Add the RestApi address of the JobManager of the Flink cluster. In HA mode, the addresses are separated by commas, for example: 192.168.123.101:8081',
@@ -863,6 +969,26 @@ export default {
   'rc.doc.typePlaceholder': 'Please select the function type this Document belongs to!',
   'rc.doc.version': 'Version',
   'rc.doc.versionPlaceholder': 'Please select the version this Document belongs to!',
+  'rc.doc.type.codeSnippetOrTemplate': 'Code Snippet/Template',
+  'rc.doc.type.flinkParam': 'Flink Parameter',
+  'rc.doc.type.functionOrUDF': 'Function/UDF',
+  'rc.doc.type.other': 'Other',
+  'rc.doc.function.type.compare': 'Comparison Function',
+  'rc.doc.function.type.logical': 'Logical Function',
+  'rc.doc.function.type.arithmetic': 'Arithmetic Function',
+  'rc.doc.function.type.string': 'String Function',
+  'rc.doc.function.type.time': 'Time Function',
+  'rc.doc.function.type.conditional': 'Conditional Function',
+  'rc.doc.function.type.typeConver': 'Type Conversion Function',
+  'rc.doc.function.type.collection': 'Collection Function',
+  'rc.doc.function.type.valueConstruction': 'Value Construction Function',
+  'rc.doc.function.type.valueAccess': 'Value Access Function',
+  'rc.doc.function.type.group': 'Grouping Function',
+  'rc.doc.function.type.hash': 'Hash Function',
+  'rc.doc.function.type.aggregate': 'Aggregate Function',
+  'rc.doc.function.type.column': 'Column Function',
+  'rc.doc.function.type.tableAggregate': 'Table-Valued Aggregate Function',
+  'rc.doc.function.type.other': 'Other Function',
   'rc.ds.application': 'Application',
   'rc.ds.autoIncrement': 'Autoincrement',
   'rc.ds.backup': 'Backup',
@@ -880,6 +1006,8 @@ export default {
   'rc.ds.default': 'Default Value',
   'rc.ds.delete': 'Delete DataSource',
   'rc.ds.deleteConfirm': 'Are you sure to delete this DataSource? ',
+  'rc.ds.total.db': 'Total {total} databases',
+  'rc.ds.total.table': 'Total {total} tables',
   'rc.ds.detail.tag.console': 'Console',
   'rc.ds.detail.tag.desc': 'Description',
   'rc.ds.detail.tag.gensql': 'Generate SQL',
@@ -929,7 +1057,8 @@ export default {
   'rc.gp.build.step.4': 'Get Artifact',
   'rc.gp.build.step.5': 'Analysis UDF',
   'rc.gp.build.step.6': 'Finish',
-  'rc.gp.buildArgs': 'Build Arguments',
+  'rc.gp.buildArgs':
+    'Build parameters: Instructions need to be included in characters, please use single quotes \'\', double quotes will be escaped as \\"\\"',
   'rc.gp.buildConfirm': 'Are you sure to start building this project? ',
   'rc.gp.buildFail': 'Build failed',
   'rc.gp.buildState': 'Build State',
@@ -1006,6 +1135,9 @@ export default {
   'rc.resource.enable': 'Resource management function is not enabled',
   'rc.resource.enable.tips':
     'Please go to [Setting Center -> Global Settings -> Resource Configuration] to enable the resource management function!!!',
+  'rc.resource.delete': 'Delete Resource',
+  'rc.resource.deleteConfirm':
+    'We have detected that you have enabled physical deletion mode. Once executed, it cannot be restored and this operation is irreversible. Are you sure you want to delete this resource file?',
 
   'rc.template.codeType': 'Code Type',
   'rc.template.codeTypePlaceholder': 'Please select code type! ',
@@ -1031,6 +1163,11 @@ export default {
   'rc.udf.register.deleteConfirm': 'Are you sure you want to delete this UDF? ',
   'rc.udf.register': 'Register UDF',
   'rc.udf.register.select': 'Please select a non-directory node',
+  // ingress
+  'rc.cc.k8s.ingress.enabled': 'Kubernetes ingress enable',
+  'rc.cc.k8s.ingress.enabledHelp': 'Kubernetes ingress enable! eg',
+  'rc.cc.k8s.ingress.domain': 'Kubernetes ingress domain address',
+  'rc.cc.k8s.ingress.domainHelp': 'Kubernetes ingress domain address! eg',
   /**
    *
    * role
@@ -1048,6 +1185,8 @@ export default {
   'role.deleteConfirm': 'Are you sure you want to delete this Role？',
   'role.roleCode': 'Role Code',
   'role.roleManagement': 'Role Management',
+  'role.roleManagement.tips':
+    'The system has assigned [Admin] users by default when creating tenants, which means that all tenants will include [Admin] users. When creating roles, it is not possible to freely specify tenants. If you need to specify a non current tenant, please select the tenant according to your own needs and switch in the upper right corner (if there is no new tenant in the options, please refresh the page after the tenant is successfully created). After the switch is completed, perform related operations such as creating roles and role empowerment',
   'role.roleName': 'Role Name',
   'role.update': 'Update Role',
   'role.user.list': 'Role of User List',
@@ -1133,6 +1272,9 @@ export default {
   'sys.ldap.settings.keyword':
     'You can enter your username/nickname for search, support fuzzy queries, enter keywords and press enter to complete the search',
   'sys.ldap.settings.loadable': 'Whether it can be imported',
+  'sys.setting.ingress': 'Ingress configuration',
+  'sys.setting.approval': 'Approval Configuration',
+  'sys.setting.approval.tooltip': 'Approval Configuration for task submit',
   /**
    *
    * tenant
@@ -1280,5 +1422,40 @@ export default {
   'dashboard.theme.shine': 'Purple',
   'dashboard.theme.vintage': 'Vintage',
   'dashboard.theme.westeros': 'Westeros',
-  'dashboard.theme.wonderland': 'Wonderland'
+  'dashboard.theme.wonderland': 'Wonderland',
+
+  'datastudio.toolbar.rightClick.hideToolbarDesc': 'hides the toolbar window name',
+  'datastudio.toolbar.rightClick.showToolbarDesc': 'displays the toolbar window name',
+  'datastudio.toolbar.rightClick.closeCompact': 'turn off compact mode',
+  'datastudio.toolbar.rightClick.openCompact': 'turn on compact mode',
+
+  'approval.dinky.not.open':
+    'Dinky approval is not enabled, please go to the Setting Center -> Approval Configuration switch to open',
+  'approval.reviewList': 'Review List',
+  'approval.submitList': 'Submit List',
+  'approval.id': 'Approval Id',
+  'approval.taskId': 'Task Id',
+  'approval.previousTaskVersion': 'Previous Task Version Id',
+  'approval.currentTaskVersion': 'Current Task Version Id',
+  'approval.status': 'Approval Status',
+  'approval.submitterName': 'Submitter Name',
+  'approval.submitterComment': 'Submitter Comment',
+  'approval.reviewerName': 'Reviewer Name',
+  'approval.reviewerComment': 'Reviewer Comment',
+  'approval.status.created': 'CREATED',
+  'approval.status.withdrawn': 'WITHDRAWN',
+  'approval.status.submitted': 'SUBMITTED',
+  'approval.status.approved': 'APPROVED',
+  'approval.status.rejected': 'REJECTED',
+  'approval.status.canceled': 'CANCELED',
+  'approval.operation.create': 'Create Approval',
+  'approval.operation.withdraw': 'Withdraw Approval',
+  'approval.operation.submit': 'Submit Approval',
+  'approval.operation.approve': 'Approve Approval',
+  'approval.operation,reject': 'Reject Approval',
+  'approval.operation.cancel': 'Cancel Approval',
+  'approval.reviewer.required': 'Please select a reviewer',
+  'approval.submit.comment': 'Submit Remark',
+  'approval.review.comment': 'Review Comment',
+  'approval.taskInfo': 'Task Info'
 };

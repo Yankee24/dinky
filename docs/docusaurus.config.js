@@ -85,12 +85,16 @@ const config = {
             ({
                 docs: {
                     includeCurrentVersion: true,
-                    lastVersion: '1.0',
+                    lastVersion: '1.1',
                     versions: {
                         current: {
                             label: 'Dev',
                             path: '/next',
                             banner: 'unreleased',
+                        },
+                        '1.1': {
+                            label: '1.1',
+                            path: '/1.1',
                         },
                         '1.0': {
                             label: '1.0',
@@ -267,7 +271,7 @@ const config = {
                     width: 100,
                     height: 30,
                 },
-                copyright: `Copyright © ${new Date().getFullYear()} Dinky, Inc. DataLinkDC.<br/>
+                copyright: `Copyright © ${new Date().getFullYear()} Dinky.<br/>
                     <a href="https://beian.miit.gov.cn" target="_blank">鲁ICP备20001630号-3</a>`,
             },
             prism: {

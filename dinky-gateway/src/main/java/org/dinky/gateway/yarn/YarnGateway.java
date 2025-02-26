@@ -22,7 +22,9 @@ package org.dinky.gateway.yarn;
 import org.dinky.assertion.Asserts;
 import org.dinky.constant.CustomerConfigureOptions;
 import org.dinky.context.FlinkUdfPathContextHolder;
+import org.dinky.data.constant.DirConstant;
 import org.dinky.data.enums.JobStatus;
+import org.dinky.data.model.CustomConfig;
 import org.dinky.data.model.SystemConfiguration;
 import org.dinky.executor.ClusterDescriptorAdapterImpl;
 import org.dinky.gateway.AbstractGateway;
@@ -32,10 +34,10 @@ import org.dinky.gateway.config.GatewayConfig;
 import org.dinky.gateway.enums.ActionType;
 import org.dinky.gateway.enums.SavePointType;
 import org.dinky.gateway.exception.GatewayException;
-import org.dinky.gateway.model.CustomConfig;
 import org.dinky.gateway.result.SavePointResult;
 import org.dinky.gateway.result.TestResult;
 import org.dinky.gateway.result.YarnResult;
+import org.dinky.gateway.utils.RequestKerberosUrlUtils;
 import org.dinky.utils.FlinkJsonUtil;
 import org.dinky.utils.ThreadUtil;
 
@@ -72,9 +74,12 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.zookeeper.ZooKeeper;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.net.URI;
 import java.util.ArrayList;
@@ -89,6 +94,7 @@ import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ReUtil;
@@ -98,7 +104,7 @@ import cn.hutool.http.HttpUtil;
 public abstract class YarnGateway extends AbstractGateway {
     private static final String HTML_TAG_REGEX = "<pre>(.*)</pre>";
     private final String TMP_SQL_EXEC_DIR =
-            String.format("%s/tmp/sql-exec/%s", System.getProperty("user.dir"), UUID.randomUUID());
+            String.format("%s/sql-exec/%s", DirConstant.getTempRootDir(), UUID.randomUUID());
 
     protected YarnConfiguration yarnConfiguration;
 
@@ -110,6 +116,7 @@ public abstract class YarnGateway extends AbstractGateway {
         super(config);
     }
 
+    @Override
     public void init() {
         initConfig();
         initYarnClient();
@@ -124,6 +131,10 @@ public abstract class YarnGateway extends AbstractGateway {
         final FlinkConfig flinkConfig = config.getFlinkConfig();
         if (Asserts.isNotNull(flinkConfig.getConfiguration())) {
             addConfigParas(flinkConfig.getConfiguration());
+        }
+        // Adding custom Flink configurations
+        if (Asserts.isNotNull(flinkConfig.getFlinkConfigList())) {
+            addConfigParas(flinkConfig.getFlinkConfigList());
         }
 
         configuration.set(DeploymentOptions.TARGET, getType().getLongValue());
@@ -186,7 +197,7 @@ public abstract class YarnGateway extends AbstractGateway {
                 hadoopUserName = "hdfs";
             }
 
-            // 设置 yarn 提交的用户名
+            // Set the username for the yarn submission
             String yarnUser = configuration.get(CustomerConfigureOptions.YARN_APPLICATION_USER);
             if (StrUtil.isNotBlank(yarnUser)) {
                 UserGroupInformation.setLoginUser(UserGroupInformation.createRemoteUser(yarnUser));
@@ -205,6 +216,7 @@ public abstract class YarnGateway extends AbstractGateway {
         return new Path(URI.create(config.getClusterConfig().getHadoopConfigPath() + "/" + path));
     }
 
+    @Override
     public SavePointResult savepointCluster(String savePoint) {
         if (Asserts.isNull(yarnClient)) {
             init();
@@ -215,6 +227,7 @@ public abstract class YarnGateway extends AbstractGateway {
         return runClusterSavePointResult(savePoint, applicationId, clusterDescriptor);
     }
 
+    @Override
     public SavePointResult savepointJob(String savePoint) {
         if (Asserts.isNull(yarnClient)) {
             init();
@@ -247,13 +260,14 @@ public abstract class YarnGateway extends AbstractGateway {
                 Thread.sleep(3000);
                 clusterClient.shutDownCluster();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error(e.getMessage());
             } finally {
                 clusterClient.close();
             }
         });
     }
 
+    @Override
     public TestResult test() {
         try {
             initConfig();
@@ -359,19 +373,18 @@ public abstract class YarnGateway extends AbstractGateway {
     }
 
     protected YarnClusterDescriptor createInitYarnClusterDescriptor() {
-        YarnClusterDescriptor yarnClusterDescriptor = new YarnClusterDescriptor(
+        return new YarnClusterDescriptor(
                 configuration,
                 yarnConfiguration,
                 yarnClient,
                 YarnClientYarnClusterInformationRetriever.create(yarnClient),
                 true);
-        return yarnClusterDescriptor;
     }
 
     protected String getWebUrl(ClusterClient<ApplicationId> clusterClient, YarnResult result)
             throws YarnException, IOException, InterruptedException {
         String webUrl;
-        int counts = SystemConfiguration.getInstances().getJobIdWait();
+        int counts = SystemConfiguration.getInstances().GetJobIdWaitValue();
         while (yarnClient.getApplicationReport(clusterClient.getClusterId()).getYarnApplicationState()
                         == YarnApplicationState.ACCEPTED
                 && counts-- > 0) {
@@ -395,6 +408,39 @@ public abstract class YarnGateway extends AbstractGateway {
                     + JobsOverviewHeaders.URL.substring(1);
 
             String json = HttpUtil.get(url);
+
+            // 增加判断访问Flink WebUI如果认证失败，尝试使用Kerberos认证
+            if (HttpUtil.createGet(url).execute().getStatus() == 401) {
+                logger.info("yarn application api url:" + url);
+                logger.info(
+                        "HTTP API return code 401, try to authenticate using the Kerberos get yarn application state.");
+                org.apache.http.HttpResponse httpResponse = null;
+                String principal = configuration.get(SecurityOptions.KERBEROS_LOGIN_PRINCIPAL);
+                String keytab = configuration.get(SecurityOptions.KERBEROS_LOGIN_KEYTAB);
+                logger.info("get principal:" + principal + "||keytab:" + keytab);
+                BufferedReader in = null;
+                try {
+                    RequestKerberosUrlUtils restTest = new RequestKerberosUrlUtils(principal, keytab, null, false);
+                    httpResponse = restTest.callRestUrl(url, principal);
+                    InputStream inputStream = httpResponse.getEntity().getContent();
+                    in = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+                    String str = null;
+                    while ((str = in.readLine()) != null) {
+                        logger.info("yarn application state api content:" + str);
+                        json = str;
+                    }
+                    if (httpResponse.getStatusLine().getStatusCode() != 200) {
+                        throw new RuntimeException(String.format(
+                                "Failed to get job details, please check yarn cluster status. Web URL is: %s the job tracking url is: %s",
+                                webUrl, url));
+                    }
+                } catch (Exception e) {
+                    logger.info("Failed to kerberos authentication:" + e.getMessage());
+                    e.printStackTrace();
+                }
+                logger.info("kerberos authentication login successfully and start to get job details");
+            }
+
             try {
                 MultipleJobsDetails jobsDetails = FlinkJsonUtil.toBean(json, JobsOverviewHeaders.getInstance());
                 jobDetailsList.addAll(jobsDetails.getJobs());
@@ -458,7 +504,7 @@ public abstract class YarnGateway extends AbstractGateway {
         HighAvailabilityMode highAvailabilityMode = HighAvailabilityMode.fromConfig(configuration);
 
         if (HighAvailabilityMode.ZOOKEEPER == highAvailabilityMode) {
-            configuration.setString(HighAvailabilityOptions.HA_CLUSTER_ID, appId);
+            configuration.set(HighAvailabilityOptions.HA_CLUSTER_ID, appId);
             String zkQuorum = configuration.getValue(HighAvailabilityOptions.HA_ZOOKEEPER_QUORUM);
 
             if (zkQuorum == null || StringUtils.isBlank(zkQuorum)) {
@@ -467,7 +513,7 @@ public abstract class YarnGateway extends AbstractGateway {
                         + HighAvailabilityOptions.HA_ZOOKEEPER_QUORUM.key()
                         + "'.");
             }
-            int sessionTimeout = configuration.getInteger(HighAvailabilityOptions.ZOOKEEPER_SESSION_TIMEOUT);
+            int sessionTimeout = Convert.toInt(configuration.get(HighAvailabilityOptions.ZOOKEEPER_SESSION_TIMEOUT));
             String root = configuration.getValue(HighAvailabilityOptions.HA_ZOOKEEPER_ROOT);
             String namespace = configuration.getValue(HighAvailabilityOptions.HA_CLUSTER_ID);
 
@@ -489,16 +535,18 @@ public abstract class YarnGateway extends AbstractGateway {
                     }
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("", e);
             } finally {
                 if (Asserts.isNotNull(zooKeeper)) {
                     try {
                         zooKeeper.close();
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        logger.error("", e);
                     }
                 }
             }
+        } else {
+            logger.info("High availability non-ZooKeeper mode, current mode is：{}", highAvailabilityMode);
         }
         return null;
     }
@@ -507,12 +555,11 @@ public abstract class YarnGateway extends AbstractGateway {
      * Creates a ZooKeeper path of the form "/a/b/.../z".
      */
     private static String generateZookeeperPath(String... paths) {
-        final String result = Arrays.stream(paths)
+
+        return Arrays.stream(paths)
                 .map(YarnGateway::trimSlashes)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.joining("/", "/", ""));
-
-        return result;
     }
 
     private static String trimSlashes(String input) {

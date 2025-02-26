@@ -23,7 +23,7 @@ import { Space } from 'antd';
 import { DefaultOptionType } from 'antd/es/select';
 import { MenuItemType } from 'rc-menu/lib/interface';
 
-export const STUDIO_TAG_RIGHT_CONTEXT_MENU: MenuItemType[] = [
+export const TAG_RIGHT_CONTEXT_MENU: MenuItemType[] = [
   {
     key: 'closeAll',
     label: (
@@ -41,6 +41,92 @@ export const STUDIO_TAG_RIGHT_CONTEXT_MENU: MenuItemType[] = [
         {l('right.menu.closeOther')}
       </Space>
     )
+  }
+];
+
+/**
+ * 作业 方言类型
+ * @type {({options: ({label: string, value: string} | {label: string, value: string} | {label: string, value: string} | {label: string, value: string})[], label: string} | {options: ({label: string, value: string} | {label: string, value: string} | {label: string, value: string} | {label: string, value: string} | {label: string, value: string} | {label: string, value: string} | {label: string, value: string} | {label: string, value: string} | {label: string, value: string} | {label: string, value: string} | {label: string, value: string})[], label: string} | {options: ({label: string, value: string} | {label: string, value: string} | {label: string, value: string})[], label: string})[]}
+ */
+export const JOB_TYPE: DefaultOptionType[] = [
+  {
+    label: 'Flink Job Type',
+    options: [
+      {
+        value: 'FlinkSql',
+        label: 'FlinkSql'
+      },
+      {
+        value: 'FlinkJar',
+        label: 'FlinkJar'
+      },
+      {
+        value: 'FlinkSqlEnv',
+        label: 'FlinkSqlEnv'
+      }
+    ]
+  },
+  {
+    label: 'Jdbc Query Type',
+    options: [
+      {
+        value: 'Mysql',
+        label: 'Mysql'
+      },
+      {
+        value: 'Oracle',
+        label: 'Oracle'
+      },
+      {
+        value: 'SqlServer',
+        label: 'SqlServer'
+      },
+      {
+        value: 'PostgreSql',
+        label: 'PostgreSql'
+      },
+      {
+        value: 'ClickHouse',
+        label: 'ClickHouse'
+      },
+      {
+        value: 'Doris',
+        label: 'Doris'
+      },
+      {
+        value: 'Hive',
+        label: 'Hive'
+      },
+      {
+        value: 'Phoenix',
+        label: 'Phoenix'
+      },
+      {
+        value: 'StarRocks',
+        label: 'StarRocks'
+      },
+      {
+        value: 'Presto',
+        label: 'Presto'
+      }
+    ]
+  },
+  {
+    label: 'Other Type',
+    options: [
+      {
+        value: 'Java',
+        label: 'Java'
+      },
+      {
+        value: 'Scala',
+        label: 'Scala'
+      },
+      {
+        value: 'Python',
+        label: 'Python'
+      }
+    ]
   }
 ];
 

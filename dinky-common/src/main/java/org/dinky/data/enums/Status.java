@@ -93,6 +93,7 @@ public enum Status {
     OFFLINE_FAILED(9036, "offline.failed"),
     VERSION_ROLLBACK_SUCCESS(9037, "version.rollback.success"),
     VERSION_ROLLBACK_FAILED(9038, "version.rollback.failed"),
+    NESTED_DEFINED_DENY(9039, "nested.defined.deny"),
 
     /**
      * user,tenant,role
@@ -193,6 +194,10 @@ public enum Status {
     MODE_IS_NOT_ALLOW_SELECT(12014, "mode.is.not.allow.select"),
     OPERATE_NOT_SUPPORT_QUERY(12015, "operate.not.support.query"),
     TASK_NOT_OPERATE_PERMISSION(12016, "task.not.operate.permission"),
+    CATALOGUE_NOT_EXIST(12017, "catalogue.not.exist"),
+    CATALOGUE_IS_EXIST(12018, "catalogue.is.exist"),
+    TASK_NAME_NOT_MATCH_CATALOGUE_NAME(12019, "task.name.not.match.catalogue.name"),
+    NAME_IS_EXIST(12021, "catalogue.name.not.exist"),
 
     /**
      * alert instance
@@ -297,6 +302,7 @@ public enum Status {
      * udf template
      */
     UDF_TEMPLATE_EXIST_RELATIONSHIP(23001, "udf.template.exist.relationship"),
+    UDF_SAVE_SUCCESS_PLACEHOLDER(23002, "udf.save.success.placeholder"),
 
     /**
      * Resource
@@ -329,6 +335,8 @@ public enum Status {
     /**
      * system config
      */
+    SYS_GLOBAL_IS_FIRST(99, "sys.global.isFirst"),
+
     SYS_FLINK_SETTINGS_USERESTAPI(100, "sys.flink.settings.useRestAPI"),
     SYS_FLINK_SETTINGS_USERESTAPI_NOTE(101, "sys.flink.settings.useRestAPI.note"),
     SYS_FLINK_SETTINGS_JOBIDWAIT(104, "sys.flink.settings.jobIdWait"),
@@ -346,6 +354,9 @@ public enum Status {
     SYS_ENV_SETTINGS_PYTHONHOME_NOTE(115, "sys.env.settings.pythonHome.note"),
     SYS_ENV_SETTINGS_DINKYADDR(116, "sys.env.settings.dinkyAddr"),
     SYS_ENV_SETTINGS_DINKYADDR_NOTE(117, "sys.env.settings.dinkyAddr.note"),
+
+    SYS_ENV_SETTINGS_DINKYTOKEN(116, "sys.env.settings.dinkyToken"),
+    SYS_ENV_SETTINGS_DINKYTOKEN_NOTE(117, "sys.env.settings.dinkyToken.note"),
 
     SYS_ENV_SETTINGS_JOB_RESEND_DIFF_SECOND(118, "sys.env.settings.jobResendDiffSecond"),
     SYS_ENV_SETTINGS_JOB_RESEND_DIFF_SECOND_NOTE(119, "sys.env.settings.jobResendDiffSecond.note"),
@@ -403,6 +414,8 @@ public enum Status {
     SYS_METRICS_SETTINGS_FLINK_GATHERTIMEOUT_NOTE(155, "sys.metrics.settings.flink.gatherTimeout.note"),
     SYS_RESOURCE_SETTINGS_ENABLE(156, "sys.resource.settings.base.enable"),
     SYS_RESOURCE_SETTINGS_ENABLE_NOTE(157, "sys.resource.settings.base.enable.note"),
+    SYS_RESOURCE_SETTINGS_PHYSICAL_DELETION(182, "sys.resource.settings.base.physicalDeletion"),
+    SYS_RESOURCE_SETTINGS_PHYSICAL_DELETION_NOTE(183, "sys.resource.settings.base.physicalDeletion.note"),
     SYS_RESOURCE_SETTINGS_UPLOAD_BASE_PATH(158, "sys.resource.settings.base.upload.base.path"),
     SYS_RESOURCE_SETTINGS_UPLOAD_BASE_PATH_NOTE(159, "sys.resource.settings.base.upload.base.path.note"),
     SYS_RESOURCE_SETTINGS_MODEL(160, "sys.resource.settings.base.model"),
@@ -433,8 +446,8 @@ public enum Status {
     /**
      * gateway config
      */
-    GAETWAY_KUBERNETS_TEST_FAILED(180, "gateway.kubernetes.test.failed"),
-    GAETWAY_KUBERNETS_TEST_SUCCESS(181, "gateway.kubernetes.test.success"),
+    GATEWAY_KUBERNETES_TEST_FAILED(180, "gateway.kubernetes.test.failed"),
+    GATEWAY_KUBERNETES_TEST_SUCCESS(181, "gateway.kubernetes.test.success"),
 
     /**
      * process
@@ -448,7 +461,32 @@ public enum Status {
     PROCESS_REGISTER_EXITS(196, "process.register.exits"),
     PROCESS_CLEAR_LOG_SUCCESS(198, "process.clear.log.success"),
     PROCESS_CLEAR_LOG_FAILED(199, "process.clear.log.failed"),
-    ;
+
+    SYS_FLINK_SETTINGS_USE_FLINK_HISTORY_SERVER(200, "sys.flink.settings.useFlinkHistoryServer"),
+    SYS_FLINK_SETTINGS_USE_FLINK_HISTORY_SERVER_NOTE(201, "sys.flink.settings.useFlinkHistoryServer.note"),
+    SYS_FLINK_SETTINGS_FLINK_HISTORY_SERVER_PORT(202, "sys.flink.settings.flinkHistoryServerPort"),
+    SYS_FLINK_SETTINGS_FLINK_HISTORY_SERVER_PORT_NOTE(203, "sys.flink.settings.flinkHistoryServerPort.note"),
+    SYS_FLINK_SETTINGS_FLINK_HISTORY_SERVER_ARCHIVE_REFRESH_INTERVAL(
+            204, "sys.flink.settings.flinkHistoryServerArchiveRefreshInterval"),
+    SYS_FLINK_SETTINGS_FLINK_HISTORY_SERVER_ARCHIVE_REFRESH_INTERVAL_NOTE(
+            205, "sys.flink.settings.flinkHistoryServerArchiveRefreshInterval.note"),
+
+    /**
+     * approval
+     * */
+    SYS_APPROVAL_SETTINGS_ENABLE_TASK_SUBMIT_REVIEW(206, "sys.approval.settings.enableTaskSubmitReview"),
+    SYS_APPROVAL_SETTINGS_ENABLE_TASK_SUBMIT_REVIEW_NOTE(207, "sys.approval.settings.enableTaskSubmitReview.note"),
+    SYS_APPROVAL_SETTINGS_ENFORCE_CROSS_REVIEW(208, "sys.approval.settings.enforceCrossReview"),
+    SYS_APPROVAL_SETTINGS_ENFORCE_CROSS_REVIEW_NOTE(209, "sys.approval.settings.enforceCrossReview.note"),
+    SYS_APPROVAL_SETTINGS_TASK_REVIEWER_ROLES(210, "sys.approval.settings.taskReviewerRoles"),
+    SYS_APPROVAL_SETTINGS_TASK_REVIEWER_ROLES_NOTE(211, "sys.approval.settings.taskReviewerRoles.note"),
+    SYS_APPROVAL_TASK_NOT_APPROVED(212, "sys.approval.taskNotApproved"),
+    SYS_APPROVAL_DUPLICATE_APPROVAL_IN_PROCESS(213, "sys.approval.duplicateInProcess"),
+    /**
+     *  Catalog
+     */
+    SYS_CATALOG_ONLY_SUPPORT_FLINK_SQL_OPERATION(214, "sys.catalog.operationOnlySupportedOnFlinkSql");
+
     private final int code;
     private final String key;
 

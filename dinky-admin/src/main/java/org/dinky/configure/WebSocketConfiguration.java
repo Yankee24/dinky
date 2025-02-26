@@ -19,29 +19,47 @@
 
 package org.dinky.configure;
 
+import org.dinky.ws.handler.WsMessageEventHandler;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.web.embedded.undertow.UndertowBuilderCustomizer;
+import org.springframework.boot.web.embedded.undertow.UndertowDeploymentInfoCustomizer;
+import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
+import lombok.AllArgsConstructor;
+
 @Configuration
-public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer {
+@AllArgsConstructor
+public class WebSocketConfiguration {
+    private final List<WsMessageEventHandler> wsMessageEventHandlerList;
 
     @Bean
     public ServerEndpointExporter serverEndpointExporter() {
         return new ServerEndpointExporter();
     }
 
-    //    @Override
-    //    public void registerStompEndpoints(StompEndpointRegistry stompEndpointRegistry) {
-    //        stompEndpointRegistry.addEndpoint("/stomp").setAllowedOrigins("*");
-    //    }
+    @Bean
+    UndertowServletWebServerFactory undertowServletWebServerFactory(
+            ObjectProvider<UndertowDeploymentInfoCustomizer> deploymentInfoCustomizers,
+            ObjectProvider<UndertowBuilderCustomizer> builderCustomizers) {
+        UndertowServletWebServerFactory factory = new UndertowServletWebServerFactory();
+        factory.getDeploymentInfoCustomizers()
+                .addAll(deploymentInfoCustomizers.orderedStream().collect(Collectors.toList()));
+        factory.getBuilderCustomizers()
+                .addAll(builderCustomizers.orderedStream().collect(Collectors.toList()));
+        return factory;
+    }
 
-    //    @Override
-    //    public void configureMessageBroker(MessageBrokerRegistry registry) {
-    //        registry.enableSimpleBroker("/topic", "/queue");
-    //        registry.setApplicationDestinationPrefixes("/app");
-    //        registry.setUserDestinationPrefix("/user");
-    //        registry.setCacheLimit(1024 * 1024);
-    //    }
+    @PostConstruct
+    public void init() {
+        wsMessageEventHandlerList.forEach(WsMessageEventHandler::run);
+    }
 }

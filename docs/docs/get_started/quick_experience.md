@@ -14,10 +14,10 @@ title: 快速开始
 
 ```shell
 # 拉取镜像
-docker pull dinkydocker/dinky-standalone-server:1.0.3-flink1.17
+docker pull dinkydocker/dinky-standalone-server:1.1.0-flink1.17
 # 运行程序
 docker run -p 8888:8888 \
- --name dinky dinkydocker/dinky-standalone-server:1.0.3-flink1.17
+ --name dinky dinkydocker/dinky-standalone-server:1.1.0-flink1.17
 ```
 
 :::tip 注意
@@ -31,7 +31,7 @@ Docker启动成功后，在浏览器里输入地址http://ip:8888，看到以下
 > 用户名: admin   
 > 密码 :dinky123!@#
 
-![login](http://pic.dinky.org.cn/dinky/docs/zh-CN//fast-guide-login.png)
+![login](https://pic.dinky.org.cn/dinky/docs/zh-CN//2024-11-22/fast-guide-login.png)
 
 
 
@@ -59,15 +59,15 @@ CREATE TABLE Orders (
 select order_number,price,first_name,last_name,order_time from Orders 
 ```
 
-![](http://pic.dinky.org.cn/dinky/docs/zh-CN//fast-guide-preview.png)
+![](https://pic.dinky.org.cn/dinky/docs/zh-CN//2024-11-22/fast-guide-preview.png)
 
 ### 预览查询结果
 
 点击右上角 `预览按钮`，会启动local集群并执行任务，下方控制台会实时显示运行日志，提交成功后会切换到`结果选项卡`，点击 `获取最新数据` ，即可查看 Select 语句的执行结果。
 
-![](http://pic.dinky.org.cn/dinky/docs/zh-CN//fast-guide-preview-result.png)
+![](https://pic.dinky.org.cn/dinky/docs/zh-CN//2024-11-22/fast-guide-preview-result.png)
 :::tip 说明
-预览功能只支持select语句查询结果(目前不支持Application与Prejob预览功能)，如果您是正常的带有insert的FlinkSql作业，请点击`执行按钮`
+预览功能支持select语句、包含insert语句的FlinkSQL作业或CDCSOURCE整库同步作业的调试查询结果(目前不支持Application与Prejob预览功能)。
 :::
 
 ### 任务提交
@@ -99,12 +99,13 @@ from datagen_source;
 点击提交按钮，即可提交任务到集群
 ### 作业运维
 任务提交成功后，我们可以进入运维中心页面。
-![](http://pic.dinky.org.cn/dinky/docs/zh-CN//fast-guide-devops.png)
+![](https://pic.dinky.org.cn/dinky/docs/zh-CN//2024-11-22/fast-guide-devops.png)
 找到我们的作业，点击**详情按钮**，即可查看作业的运行状态，日志，监控等信息。
-![](http://pic.dinky.org.cn/dinky/docs/zh-CN//fast-guide-job-detail.png)
+![](https://pic.dinky.org.cn/dinky/docs/zh-CN//2024-11-22/fast-guide-job-detail.png)
 
 
 ## Nginx 配置
+### Dinky 1.0-1.1版本
 Dinky使用了SSE技术作为日志推流，如果您使用了nginx代理，需要配置Nginx支持SSE，否则默认Nginx配置会导致大量连接异常，造成页面极其卡顿，
 需要在Nginx配置文件中添加以下配置：
 
@@ -114,7 +115,47 @@ proxy_cache off;
 proxy_read_timeout 86400s;
 proxy_send_timeout 86400s;
 ```
+### Dinky 1.2以后版本
+Dinky使用了Websocket技术作为日志推流，如果您使用了nginx代理，需要配置Nginx支持Websocket，否则无法使用控制台等功能
+需要在Nginx配置文件中添加以下配置：
 
+> 注意，以下为参考配置，并非强制要求标准配置，请根据你的自身情况进行修改
+
+```shell
+    location /api/ws/global {
+        proxy_pass ${你的后端地址};
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_set_header  Host $http_host;
+        proxy_set_header  X-Real-IP  $remote_addr;
+        proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header  X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /ws/sql-gateway/ {
+        proxy_pass ${你的后端地址};
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_set_header  Host $http_host;
+        proxy_set_header  X-Real-IP  $remote_addr;
+        proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header  X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+```
+在Http节点加入配置支持websocket
+```shell
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
+```
 
 ## 写在最后
-至此，您已经了解了基础DInky使用流程，但Dinky的能力远不止于此，您可以继续阅读其他文档，了解更多Dinky的功能，尽享Dinky为你带来的丝滑开发体验
+至此，您已经了解了基础Dinky使用流程，但Dinky的能力远不止于此，您可以继续阅读其他文档，了解更多Dinky的功能，尽享Dinky为你带来的丝滑开发体验

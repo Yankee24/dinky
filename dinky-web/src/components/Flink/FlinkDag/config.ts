@@ -17,11 +17,10 @@
  *
  */
 
-import { DagreLayoutOptions } from '@antv/layout/lib/layout/types';
-import { Platform } from '@antv/x6';
 import { Options } from '@antv/x6/lib/graph/options';
 import Connecting = Options.Connecting;
 import Manual = Options.Manual;
+import { DagreLayoutOptions } from '@antv/layout';
 
 export const edgeConfig = {
   markup: [
@@ -69,14 +68,43 @@ export const edgeConfig = {
   }
 };
 
+export const portConfigTb = {
+  groups: {
+    in: {
+      position: 'top',
+      attrs: {
+        circle: {
+          magnet: false,
+          stroke: 'transparent',
+          strokeWidth: 1,
+          fill: 'transparent'
+        }
+      }
+    },
+
+    out: {
+      position: {
+        name: 'bottom'
+      },
+      attrs: {
+        circle: {
+          magnet: false,
+          stroke: 'transparent',
+          strokeWidth: 1,
+          fill: 'transparent'
+        }
+      }
+    }
+  }
+};
+
 export const portConfig = {
   groups: {
     in: {
       position: 'left',
       attrs: {
         circle: {
-          r: 4,
-          magnet: true,
+          magnet: false,
           stroke: 'transparent',
           strokeWidth: 1,
           fill: 'transparent'
@@ -87,15 +115,11 @@ export const portConfig = {
     out: {
       position: {
         name: 'right',
-        args: {
-          dx: -32
-        }
+        args: {}
       },
-
       attrs: {
         circle: {
-          r: 4,
-          magnet: true,
+          magnet: false,
           stroke: 'transparent',
           strokeWidth: 1,
           fill: 'transparent'
@@ -106,22 +130,11 @@ export const portConfig = {
 };
 
 export const graphConnectConfig: Partial<Connecting> = {
+  connectionPoint: 'boundary',
   snap: true,
   allowBlank: false,
   allowLoop: false,
   highlight: true,
-  sourceAnchor: {
-    name: 'left',
-    args: {
-      dx: Platform.IS_SAFARI ? 4 : 8
-    }
-  },
-  targetAnchor: {
-    name: 'right',
-    args: {
-      dx: Platform.IS_SAFARI ? 4 : -8
-    }
-  },
   // Connection pile verification
   validateConnection({ sourceMagnet, targetMagnet }) {
     // Connections can only be created from output link stubs
@@ -153,18 +166,18 @@ export const graphConfig: Partial<Manual> = {
     modifiers: 'ctrl',
     factor: 1.1,
     maxScale: 1.5,
-    minScale: 0.5
+    minScale: 0.1
   },
-  connecting: graphConnectConfig
+  connecting: graphConnectConfig,
+  autoResize: true
 };
 
-export const layoutConfig: DagreLayoutOptions = {
+export const layoutConfig: DagreLayoutOptions & { type: string } = {
   type: 'dagre',
   rankdir: 'LR',
-  align: 'UL',
   ranksep: 120,
   nodesep: 40,
-  controlPoints: true
+  controlPoints: false
 };
 
 export const zoomOptions = {

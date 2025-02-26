@@ -34,7 +34,7 @@ import {
   handleRemoveById,
   updateDataByParam
 } from '@/services/BusinessCrud';
-import { PROTABLE_OPTIONS_PUBLIC, PRO_LIST_CARD_OPTIONS } from '@/services/constants';
+import { PRO_LIST_CARD_OPTIONS, PROTABLE_OPTIONS_PUBLIC } from '@/services/constants';
 import { API_CONSTANTS } from '@/services/endpoints';
 import { PermissionConstants } from '@/types/Public/constants';
 import { Cluster } from '@/types/RegCenter/data.d';
@@ -55,6 +55,7 @@ import {
   Col,
   Descriptions,
   Divider,
+  Flex,
   Input,
   List,
   Row,
@@ -65,8 +66,10 @@ import {
   Typography
 } from 'antd';
 import { useState } from 'react';
+import EllipsisMiddle from '@/components/Typography/EllipsisMiddle';
+import { isContainsChinese } from '@/utils/function';
 
-const { Text, Paragraph, Link } = Typography;
+const { Paragraph, Link } = Typography;
 
 export default () => {
   /**
@@ -90,7 +93,7 @@ export default () => {
    * @param {() => void} callback
    * @returns {Promise<void>}
    */
-  const executeAndCallback = async (callback: () => void) => {
+  const executeAndCallback = async (callback: () => Promise<any>): Promise<void> => {
     setClusterInstanceStatus((prevState) => ({ ...prevState, loading: true }));
     await callback();
     setClusterInstanceStatus((prevState) => ({ ...prevState, loading: false }));
@@ -213,47 +216,55 @@ export default () => {
     return (
       <>
         <Row wrap={false}>
-          <Col flex='85%'>
+          <Col flex={8}>
             <Paragraph>
               <blockquote>
                 {l('rc.ci.jma')}: {renderWebUiRedirect(item)}
               </blockquote>
               <blockquote>
-                {l('rc.ci.version')}: <Link>{item.version}</Link>
+                {l('rc.ci.version')}: <Link>{item.version || 'None'}</Link>
               </blockquote>
-              <Text title={item.alias} ellipsis>
-                {(item.alias || item.alias === '') && (
-                  <blockquote>
-                    {l('rc.ci.alias')}: {item.alias}
-                  </blockquote>
-                )}
-              </Text>
+              <blockquote style={{ display: 'flex' }}>
+                <span style={{ minWidth: '2vw' }}> {l('rc.ci.alias')}: </span>
+                <EllipsisMiddle
+                  copyable={false}
+                  maxCount={isContainsChinese(item.alias ?? '') ? 10 : 20}
+                  children={item.alias}
+                />
+              </blockquote>
+              <blockquote style={{ display: 'flex' }}>
+                <span style={{ minWidth: '2vw' }}> {l('rc.ci.desc')}: </span>
+                <EllipsisMiddle
+                  copyable={false}
+                  maxCount={isContainsChinese(item.note ?? '') ? 10 : 20}
+                  children={item.note}
+                />
+              </blockquote>
             </Paragraph>
-
-            <Space size={8} align={'baseline'} className={'hidden-overflow'}>
-              <EnableSwitchBtn
-                record={item}
-                onChange={() => handleChangeEnable(item)}
-                disabled={!HasAuthority(PermissionConstants.REGISTRATION_CLUSTER_INSTANCE_EDIT)}
-              />
-              <Tag color='cyan'>
-                {CLUSTER_TYPE_OPTIONS().find((record) => item.type === record.value)?.label}
-              </Tag>
-              <Tag
-                icon={item.status === 1 ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
-                color={item.status === 1 ? 'success' : 'warning'}
-              >
-                {item.status === 1
-                  ? l('global.table.status.normal')
-                  : l('global.table.status.abnormal')}
-              </Tag>
-            </Space>
           </Col>
           <Divider type={'vertical'} style={{ height: '100%' }} />
           <Col className={'card-button-list'} flex='auto'>
             {renderActionButton(item)}
           </Col>
         </Row>
+        <Flex justify={'space-around'}>
+          <EnableSwitchBtn
+            record={item}
+            onChange={() => handleChangeEnable(item)}
+            disabled={!HasAuthority(PermissionConstants.REGISTRATION_CLUSTER_INSTANCE_EDIT)}
+          />
+          <Tag color='cyan'>
+            {CLUSTER_TYPE_OPTIONS().find((record) => item.type === record.value)?.label}
+          </Tag>
+          <Tag
+            icon={item.status === 1 ? <CheckCircleOutlined /> : <ExclamationCircleOutlined />}
+            color={item.status === 1 ? 'success' : 'warning'}
+          >
+            {item.status === 1
+              ? l('global.table.status.normal')
+              : l('global.table.status.abnormal')}
+          </Tag>
+        </Flex>
       </>
     );
   };
@@ -319,8 +330,10 @@ export default () => {
           }
         >
           <Card
-            headStyle={{ minHeight: '10px' }}
-            bodyStyle={{ width: '100%', padding: '10px 4px' }}
+            styles={{
+              header: { minHeight: '10px' },
+              body: { width: '100%', padding: '10px 4px' }
+            }}
             className={'card-list-item'}
             key={item.id}
             hoverable
@@ -351,7 +364,7 @@ export default () => {
         toolBarRender={toolBarRender}
         {...PROTABLE_OPTIONS_PUBLIC}
         {...(PRO_LIST_CARD_OPTIONS as any)}
-        grid={{ gutter: 24, column: 4 }}
+        grid={{ gutter: 24, xs: 1, sm: 2, md: 2, lg: 3, xl: 3, xxl: 4 }}
         pagination={{ size: 'small', defaultPageSize: 12, hideOnSinglePage: true }}
         dataSource={data}
         loading={loading}

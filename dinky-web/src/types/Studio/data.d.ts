@@ -56,7 +56,7 @@ export type ConfigItem = {
 
 export type TaskExtConfig = {
   udfRefer: List<TaskUdfRefer>;
-  udfConfig: TaskUdfConfig;
+  udfConfig?: TaskUdfConfig;
   customConfig: List<Map<string, object>>;
 };
 
@@ -110,12 +110,12 @@ export type SavePoint = {
 
 export type TaskVersionListItem = {
   id: number;
-  taskId?: number;
+  taskId: number;
   name?: string;
   dialect?: string;
   type?: string;
   statement: string;
-  versionId?: string;
+  versionId: number;
   createTime?: string;
   isLatest?: boolean;
 };
@@ -140,6 +140,7 @@ export type K8sConfig = {
   podTemplate: string;
   jmPodTemplate: string;
   tmPodTemplate: string;
+  ingressConfig: Map<string, string>;
 };
 
 export type FlinkConfig = {

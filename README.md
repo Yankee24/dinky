@@ -10,8 +10,7 @@
 
 ## Introduction
 
-Dinky is a real-time data development platform based on Apache Flink, enabling agile data development, deployment and operation.
-
+An open-source real-time computing platform built with Apache Flink as its core, capable of real-time application job development, data debugging, and runtime monitoring, helping to facilitate efficient real-time computing applications.
 ## Feature
 
 Its main features are as follows:
@@ -36,27 +35,26 @@ Its main features are as follows:
 
 ## Run the Screenshot
 
-> FlinkSQL Studio
+> Data Studio
 
-![datastudio](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1/datastudio.png)
+![datastudio](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1-2/datastudio.png)
 
-> Grammar Check
+> Data Debug
 
-![checksql](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1/checksql.png)
+![datadebug](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1-2/data-debug.png)
 
-> Version Management
+> Task Monitor
 
-![versiondiff](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1/versiondiff.png)
+![devops](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1-2/devops.png)
 
-> lineage
+> Task Metrics
 
-![lineage](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1/lineage.png)
-
-> Task Monitoring
-
-![monitor](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1/monitor.png)
+![metrics](https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/v1-2/metrics.png)
 
 ## Participate in Contributions
+
+The dev branch is Dinky 1.3.0, and the 1.2 branch is Dinky 1.2.2.
+
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/DataLinkDC/dinky/pulls)
 
 Welcome to join the community, build a win-win situation, please refer to the contribution process： [How to contribute](https://github.com/DataLinkDC/dinky/blob/dev/docs/docs/developer_guide/contribution/how_contribute.md).
@@ -67,7 +65,7 @@ Thank you to all the people who already contributed to Dinky!
 
 ## How to Deploy
 
-See [source code compilation](https://github.com/DataLinkDC/dinky/blob/dev/docs/docs/deploy_guide/compile.mdx) and [installation and deployment](https://github.com/DataLinkDC/dinky/blob/dev/docs/docs/deploy_guide/deploy.mdx) for details.
+See [source code compilation](https://github.com/DataLinkDC/dinky/blob/dev/docs/docs/deploy_guide/compile_deploy.md) and [installation and deployment](https://github.com/DataLinkDC/dinky/blob/dev/docs/docs/deploy_guide/normal_deploy.mdx) for details.
 
 ## Thanks
 
@@ -77,9 +75,9 @@ Below is a partial list of acknowledgements:
 
 [Apache Flink](https://github.com/apache/flink)
 
-[FlinkCDC](https://github.com/ververica/flink-cdc-connectors)
+[Apache FlinkCDC](https://github.com/apache/flink-cdc)
 
-[Apache Paimon](https://github.com/apache/incubator-paimon)
+[Apache Paimon](https://github.com/apache/paimon)
 
 [Apache Dolphinscheduler](https://github.com/apache/dolphinscheduler)
 
@@ -107,13 +105,9 @@ Thanks to [JetBrains](https://www.jetbrains.com/?from=dlink) for providing a fre
 
 2.Visit the [official website](http://www.dinky.org.cn/#/) website to read the latest documentation manual.
 
-3.It is recommended to scan the code to enter the DingTalk group.
+3.Enter the WeChat user community group (recommended, add WeChat `wenmo_ai` to invite into the group) and QQ user community group (**543709668**) to communicate, and apply for the remarks "Dinky + company name + position".
 
-<img src="https://raw.githubusercontent.com/DataLinkDC/dinky/dev/images/main/dinkydingding.jpg" alt="dinkydingding" style="zoom:30%;" />
-
-4.Enter the WeChat user community group (recommended, add WeChat `wenmo_ai` to invite into the group) and QQ user community group (**543709668**) to communicate, and apply for the remarks "Dinky + company name + position".
-
-5.Follow the WeChat public account to get the latest official articles: [Dinky Open Source](https://mmbiz.qpic.cn/mmbiz_jpg/dyicwnSlTFTp6w4PuJruFaLV6uShCJDkzqwtnbQJrQ90yKDuuIC8tyMU5DK69XZibibx7EPPBRQ3ic81se5UQYs21g/0?wx_fmt=jpeg).
+4.Follow the WeChat public account to get the latest official articles: [Dinky Open Source](https://mmbiz.qpic.cn/mmbiz_jpg/dyicwnSlTFTp6w4PuJruFaLV6uShCJDkzqwtnbQJrQ90yKDuuIC8tyMU5DK69XZibibx7EPPBRQ3ic81se5UQYs21g/0?wx_fmt=jpeg).
 
 ## Copyright
 

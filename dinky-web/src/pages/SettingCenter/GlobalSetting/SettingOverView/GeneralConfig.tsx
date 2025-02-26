@@ -30,6 +30,7 @@ import { ProListMetas, ProListProps } from '@ant-design/pro-list';
 import { ActionType } from '@ant-design/pro-table';
 import { Descriptions, Input, Radio, RadioChangeEvent, Space, Switch } from 'antd';
 import React, { useRef } from 'react';
+import MoreInfo from '@/components/Typography/MoreInfo';
 
 type GeneralConfigProps = {
   data: BaseConfigProperties[];
@@ -37,7 +38,7 @@ type GeneralConfigProps = {
   onSave: (data: BaseConfigProperties) => void;
   loading: boolean;
   toolBarRender?: any;
-  selectChanges?: (e: RadioChangeEvent) => void;
+  selectChanges?: (e: RadioChangeEvent, entity: BaseConfigProperties) => void;
   auth: string;
 };
 
@@ -100,9 +101,10 @@ const GeneralConfig: React.FC<GeneralConfigProps> = (props) => {
     } else if (entity.frontType === ButtonFrontendType.OPTION) {
       return (
         <Radio.Group
-          onChange={selectChanges}
+          onChange={(e) => selectChanges?.(e, entity)}
           value={entity.value.toLowerCase()}
           disabled={!HasAuthority(auth)}
+          name={entity.key}
         >
           {entity.example.map((item: any) => (
             <Radio.Button key={item} value={item.toLowerCase()}>
@@ -127,7 +129,9 @@ const GeneralConfig: React.FC<GeneralConfigProps> = (props) => {
     },
     description: {
       editable: false,
-      render: (dom: any, entity: BaseConfigProperties) => <>{entity.note}</>
+      render: (dom: any, entity: BaseConfigProperties) => (
+        <MoreInfo maxRows={1}>{entity.note}</MoreInfo>
+      )
     },
     content: {
       dataIndex: 'value',
@@ -149,7 +153,7 @@ const GeneralConfig: React.FC<GeneralConfigProps> = (props) => {
     loading: loading,
     actionRef: actionRef,
     size: 'small',
-    dataSource: data,
+    dataSource: data.filter((item) => item.hidden !== true),
     showActions: 'hover',
     metas: { ...metasRestProps },
     editable: {

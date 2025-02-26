@@ -39,9 +39,11 @@ import cn.hutool.core.util.ObjectUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Getter
 @Setter
+@Slf4j
 public class Configuration<T> implements Serializable {
     private String key;
     private String name;
@@ -62,6 +64,8 @@ public class Configuration<T> implements Serializable {
 
     private final T defaultValue;
 
+    private Boolean hidden = false;
+
     @JsonIgnore
     private final transient List<Consumer<T>> changeEventConsumer = new LinkedList<>();
 
@@ -73,6 +77,11 @@ public class Configuration<T> implements Serializable {
 
     public Configuration<T> note(Status status) {
         this.noteKey = status.getKey();
+        return this;
+    }
+
+    public Configuration<T> hidden(boolean isHidden) {
+        this.hidden = isHidden;
         return this;
     }
 
@@ -190,7 +199,7 @@ public class Configuration<T> implements Serializable {
             try {
                 x.accept(getValue());
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("", e);
             }
         });
     }

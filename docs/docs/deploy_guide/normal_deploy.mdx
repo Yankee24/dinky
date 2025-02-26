@@ -11,8 +11,6 @@ title: 常规部署
 
 Dinky 采用 mysql 作为后端的存储库，mysql 支持 5.7+。这里假设你已经安装了 mysql 。首先需要创建 Dinky 的后端数据库，这里以配置文件中默认库创建。
 
-在 Dinky 根目录 sql 文件夹下分别放置了 dinky-mysql.sql 、 upgrade/${version}_schema/mysql/ddl 和 dml。如果第一次部署，可以直接将 sql/dinky-mysql.sql 文件在 dinky 数据库下执行。（如果之前已经部署，那 upgrade 目录下存放了各版本的升级 sql ，根据版本号按需执行即可）
-
 <Tabs groupId="operating-systems">
 <TabItem value="mysql5" label="mysql-5.x" default>
 
@@ -28,7 +26,7 @@ grant all privileges on dinky.* to 'dinky'@'%' identified by 'dinky' with grant 
 mysql>
 flush privileges;
 #此处用 dinky 用户登录
-mysql -h fdw1 -udinky -pdinky
+mysql -h {mysql地址} -udinky -pdinky
 ```
 
 </TabItem>
@@ -55,14 +53,7 @@ flush privileges;
 
 
 #### 第一次部署
-
-```sql
-#首先登录 mysql
-mysql -h fdw1  -udinky -pdinky
-mysql> use dinky;
-mysql> source /opt/dinky/sql/dinky-mysql.sql
-```
-
+Dinky使用Flyway进行数据库版本管理，在第一次部署时，无需手动建表， Flyway 会自动完成。用户只需配置好数据库连接信息，其他配置文件默认即可。
 
 ## Dinky 部署
 
@@ -132,12 +123,13 @@ Dinky 需要具备内置的 Flink 环境，该 Flink 环境的实现需要用户
 1. Dinky 并没有内置的 mysql/postgres 数据库驱动，需要用户自己上传 mysql-connector-java-xxx.jar/postgresql-xxx.jar 等jdbc 驱动到 `lib 下`或者`extends 下`
 2. Dinky 当前版本的 yarn 的 per-job 与 application 执行模式依赖 flink-shaded-hadoop ，需要额外添加 flink-shaded-hadoop-uber 包，如果您使用的是`flink-shaded-hadoop-uber-3`请手动删除该包内部的 javax.servlet 等冲突内容。
 当然如果你的 Hadoop 为 3+ 也可以自行编译对于版本的 dinky-client-hadoop.jar 以替代 uber 包，
-3. Dinky所有监控相关功能目前强依赖hadoop，即使你不需要任何hadoop功能，也需要上传flink-shaded-hadoop-uber，否则会导致监控功能无法正常使用
 :::
+
 
 将 flink-shaded-hadoop 上传到到 extends 文件目录下，使用 flink-shaded-hadoop-3 地址如下：
 
-```
+```bash
+# 非hadoop环境不需要这步操作
 https://mvnrepository.com/artifact/org.apache.flink/flink-shaded-hadoop-3-uber?repo=cloudera-repos
 ```
 
@@ -195,7 +187,15 @@ https://mvnrepository.com/artifact/org.apache.flink/flink-shaded-hadoop-3-uber?r
     ├── dinky-pg.sql -- PGSql 首次初始化脚本
     └── upgrade  -- 各个版本的升级 SQL
 ```
-对应 `Flink` 版本的依赖，放在Dinky 安装目录下 extends/flink${FLINK_VERSION} 下，例如：
+### 添加Flink依赖
+对应 `Flink` 版本的依赖，放在Dinky 安装目录下 extends/flink${FLINK_VERSION} 下，
+:::warning 注意事项
+Flink自带lib里的planner是带loader的,比如:flink-table-planner-loader-1.16.1.jar,
+需要删除带loader的jar包，换一个不带loader的jar, 可前往flink根下的opt目录中找到，
+对于standalone，hdfs，k8s等集群上的flink集群同样要做此操作
+:::
+
+例如：
 ```shell
 flink-cep-1.16.1.jar
 flink-connector-files-1.16.1.jar
@@ -207,9 +207,7 @@ flink-scala_2.12-1.16.1.jar
 flink-shaded-hadoop-2-uber-2.7.5-8.0.jar
 flink-shaded-zookeeper-3.5.9.jar
 flink-table-api-java-uber-1.16.1.jar
-# !!!特别注意,flink自带lib里的planner是带loader的,比如:flink-table-planner-loader-1.16.1.jar,
-# 需要删除带loader的jar包，换一个不带loader的jar, 可前往flink根下的opt目录中找到
-# 对于standalone，hdfs，k8s等集群上的flink集群同样要做此操作
+
 flink-table-planner_2.12-1.16.1.jar
 
 flink-table-runtime-1.16.1.jar
@@ -228,16 +226,16 @@ log4j-slf4j-impl-2.17.1.jar
 
 ```shell
 #启动
-sh auto.sh start
+sh ./bin/auto.sh start 1.20
 #停止
-sh auto.sh stop
+sh ./bin/auto.sh stop
 #重启
-sh auto.sh restart
+sh ./bin/auto.sh restart
 #查看状态
-sh auto.sh status
+sh ./bin/auto.sh status
 
 # 前台启动(调试使用,会输出日志,阻塞当前终端,结束请Ctrl+C,但是会直接退出服务,仅供启动时无日志输出且在排查问题时使用)
-sh auto.sh startOnPending
+sh auto.sh startOnPending 1.20
 
 ```
 
@@ -246,7 +244,7 @@ sh auto.sh startOnPending
 > 自 1.0.2 版本开始加入了自动检测 Flink 版本的功能，如果不传入版本号，则会自动检测 Flink 版本作为启动版本(即检测 extends 目录下的 flink${FLINK_VERSION} 文件夹)
 ```shell
 #启动
-sh auto.sh start 1.16
+sh ./bin/auto.sh start 1.16
 ```
 
 :::tip 说明
@@ -256,7 +254,9 @@ Dinky 部署需要 MySQL5.7 以上版本
 
 :::
 
+
 ## Nginx 配置
+### Dinky 1.0-1.1版本
 Dinky使用了SSE技术作为日志推流，如果您使用了nginx代理，需要配置Nginx支持SSE，否则默认Nginx配置会导致大量连接异常，造成页面极其卡顿，
 需要在Nginx配置文件中添加以下配置：
 
@@ -265,4 +265,45 @@ proxy_buffering off;
 proxy_cache off;
 proxy_read_timeout 86400s;
 proxy_send_timeout 86400s;
+```
+### Dinky 1.2以后版本
+Dinky使用了Websocket技术作为日志推流，如果您使用了nginx代理，需要配置Nginx支持Websocket，否则无法使用控制台等功能
+需要在Nginx配置文件中添加以下配置：
+
+> 注意，以下为参考配置，并非强制要求标准配置，请根据你的自身情况进行修改
+
+```shell
+    location /api/ws/global {
+        proxy_pass ${你的后端地址};
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_set_header  Host $http_host;
+        proxy_set_header  X-Real-IP  $remote_addr;
+        proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header  X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    location /ws/sql-gateway/ {
+        proxy_pass ${你的后端地址};
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+        proxy_set_header  Host $http_host;
+        proxy_set_header  X-Real-IP  $remote_addr;
+        proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header  X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+```
+在Http节点加入配置支持websocket
+```shell
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        ''      close;
+    }
 ```

@@ -27,7 +27,9 @@ import org.dinky.daemon.task.DaemonTaskConfig;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * @operate
@@ -129,28 +131,14 @@ public class FlinkJobThreadPool implements ThreadPool {
         }
     }
 
-    @Override
-    public void shutdown() {
-        synchronized (lock) {
-            for (TaskWorker worker : workers) {
-                worker.shutdown();
-            }
-            workers.clear();
-        }
-    }
-
-    @Override
-    public int getTaskSize() {
-        return queue.getTaskSize();
-    }
-
     public DaemonTask getByTaskConfig(DaemonTaskConfig daemonTask) {
         return queue.getByTaskConfig(daemonTask);
     }
 
-    public int getWorkCount() {
-        synchronized (lock) {
-            return this.workerNum.get();
-        }
+    public Set<Integer> getCurrentMonitorTaskIds() {
+        return queue.getTasks().stream()
+                .map(DaemonTask::getConfig)
+                .map(DaemonTaskConfig::getTaskId)
+                .collect(Collectors.toSet());
     }
 }

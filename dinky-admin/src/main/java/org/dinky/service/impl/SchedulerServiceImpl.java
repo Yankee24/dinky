@@ -43,7 +43,8 @@ import org.dinky.service.SchedulerService;
 import org.dinky.service.catalogue.CatalogueService;
 import org.dinky.utils.JsonUtils;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -56,7 +57,6 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -90,7 +90,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         dinkyTaskParams.setTaskId(dinkyTaskRequest.getTaskId());
         dinkyTaskParams.setAddress(
                 SystemConfiguration.getInstances().getDinkyAddr().getValue());
-        dinkyTaskRequest.setTaskParams(JSONUtil.parseObj(dinkyTaskParams).toString());
+        dinkyTaskRequest.setTaskParams(JsonUtils.toJsonString(dinkyTaskParams));
         dinkyTaskRequest.setTaskType(TASK_TYPE);
 
         String processName = getDinkyNames(catalogue, 0);
@@ -98,7 +98,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         // Get process from dolphin scheduler
         ProcessDefinition process = processClient.getProcessDefinitionInfo(projectCode, processName);
 
-        String taskName = catalogue.getName() + ":" + catalogue.getId();
+        String taskName = catalogue.getName();
         dinkyTaskRequest.setName(taskName);
 
         TaskRequest taskRequest = new TaskRequest();
@@ -113,7 +113,7 @@ public class SchedulerServiceImpl implements SchedulerService {
             taskRequest.setIsCache(dinkyTaskRequest.getIsCache());
             taskRequest.setTaskGroupId(dinkyTaskRequest.getTaskGroupId());
             taskRequest.setTaskGroupPriority(dinkyTaskRequest.getTaskGroupPriority());
-            JSONObject jsonObject = JSONUtil.parseObj(taskRequest);
+            JSONObject jsonObject = JsonUtils.toBean(taskRequest, JSONObject.class);
             JSONArray taskArray = new JSONArray();
             taskArray.set(jsonObject);
             log.info(Status.DS_ADD_WORK_FLOW_DEFINITION_SUCCESS.getMessage());
@@ -125,9 +125,9 @@ public class SchedulerServiceImpl implements SchedulerService {
             log.info("DagNodeLocation Info: {}", dagNodeLocation);
 
             ProcessTaskRelation processTaskRelation = ProcessTaskRelation.generateProcessTaskRelation(taskCode);
-            JSONObject processTaskRelationJSONObject = JSONUtil.parseObj(processTaskRelation);
+            JSONObject processTaskRelationJson = JsonUtils.toBean(processTaskRelation, JSONObject.class);
             JSONArray taskRelationArray = new JSONArray();
-            taskRelationArray.set(processTaskRelationJSONObject);
+            taskRelationArray.set(processTaskRelationJson);
 
             processClient.createOrUpdateProcessDefinition(
                     projectCode,
@@ -136,7 +136,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                     taskCode,
                     taskRelationArray.toString(),
                     taskArray.toString(),
-                    Arrays.asList(dagNodeLocation),
+                    Collections.singletonList(dagNodeLocation),
                     false);
             return true;
         }
@@ -162,7 +162,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         taskRequest.setTaskGroupId(dinkyTaskRequest.getTaskGroupId());
         taskRequest.setTaskGroupPriority(dinkyTaskRequest.getTaskGroupPriority());
 
-        String taskDefinitionJsonObj = JSONUtil.toJsonStr(taskRequest);
+        String taskDefinitionJsonObj = JsonUtils.toJsonString(taskRequest);
         taskClient.createTaskDefinition(
                 projectCode, process.getCode(), dinkyTaskRequest.getUpstreamCodes(), taskDefinitionJsonObj);
         // update the location of process
@@ -181,7 +181,8 @@ public class SchedulerServiceImpl implements SchedulerService {
         }
         List<ProcessTaskRelation> processTaskRelationList = dagData.getProcessTaskRelationList();
         List<TaskDefinition> taskDefinitionList = dagData.getTaskDefinitionList();
-        List<DagNodeLocation> locations = JSONUtil.toList(process.getLocations(), DagNodeLocation.class);
+        List<DagNodeLocation> locations =
+                new ArrayList<>(JsonUtils.toList(process.getLocations(), DagNodeLocation.class));
 
         if (CollUtil.isNotEmpty(locations)) {
             boolean matched = locations.stream().anyMatch(location -> location.getTaskCode() == taskCode);
@@ -226,12 +227,7 @@ public class SchedulerServiceImpl implements SchedulerService {
                 taskArray.toString(),
                 locations,
                 true);
-        log.info(
-                Status.DS_PROCESS_DEFINITION_UPDATE.getMessage(),
-                process.getName(),
-                taskCode,
-                taskArray.toString(),
-                locations);
+        log.info(Status.DS_PROCESS_DEFINITION_UPDATE.getMessage(), process.getName(), taskCode, taskArray, locations);
     }
 
     /**
@@ -283,7 +279,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         taskRequest.setFlag(dinkyTaskRequest.getFlag());
         taskRequest.setIsCache(dinkyTaskRequest.getIsCache());
 
-        String taskDefinitionJsonObj = JSONUtil.toJsonStr(taskRequest);
+        String taskDefinitionJsonObj = JsonUtils.toJsonString(taskRequest);
         Long updatedTaskDefinition = taskClient.updateTaskDefinition(
                 projectCode, taskCode, dinkyTaskRequest.getUpstreamCodes(), taskDefinitionJsonObj);
 
@@ -313,8 +309,7 @@ public class SchedulerServiceImpl implements SchedulerService {
         long projectCode = SystemInit.getProject().getCode();
         List<TaskMainInfo> taskMainInfos = taskClient.getTaskMainInfos(projectCode, "", "", "");
         // 去掉本身
-        taskMainInfos.removeIf(taskMainInfo ->
-                (catalogue.getName() + ":" + catalogue.getId()).equalsIgnoreCase(taskMainInfo.getTaskName()));
+        taskMainInfos.removeIf(taskMainInfo -> (catalogue.getName()).equalsIgnoreCase(taskMainInfo.getTaskName()));
         return taskMainInfos;
     }
 
@@ -337,18 +332,16 @@ public class SchedulerServiceImpl implements SchedulerService {
         long projectCode = dinkyProject.getCode();
 
         String processName = getDinkyNames(catalogue, 0);
-        String taskName = catalogue.getName() + ":" + catalogue.getId();
+        String taskName = catalogue.getName();
         TaskMainInfo taskMainInfo = taskClient.getTaskMainInfo(projectCode, processName, taskName, TASK_TYPE);
-        TaskDefinition taskDefinition = null;
+        TaskDefinition taskDefinition;
         if (taskMainInfo == null) {
-            log.error(Status.DS_WORK_FLOW_DEFINITION_NOT_EXIST.getMessage(), processName, taskName);
-            throw new BusException(Status.DS_WORK_FLOW_DEFINITION_NOT_EXIST, processName, taskName);
+            return null;
         }
 
         taskDefinition = taskClient.getTaskDefinition(projectCode, taskMainInfo.getTaskCode());
         if (taskDefinition == null) {
-            log.error(Status.DS_WORK_FLOW_NOT_SAVE.getMessage());
-            throw new BusException(Status.DS_WORK_FLOW_NOT_SAVE);
+            return null;
         }
 
         taskDefinition.setProcessDefinitionCode(taskMainInfo.getProcessDefinitionCode());
@@ -386,12 +379,12 @@ public class SchedulerServiceImpl implements SchedulerService {
             throw new SchedulerException("Get Node List Error");
         }
 
-        String name = i == 0 ? catalogue.getName() + ":" + catalogue.getId() : catalogue.getName();
+        String name = i == 0 ? catalogue.getName() : catalogue.getName();
         String next = getDinkyNames(catalogue, ++i);
 
         if (Strings.isNullOrEmpty(next)) {
             return name;
         }
-        return name + "_" + next;
+        return name + "/" + next;
     }
 }

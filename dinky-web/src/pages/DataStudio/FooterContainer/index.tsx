@@ -17,67 +17,38 @@
  *
  */
 
-import useThemeValue from '@/hooks/useThemeValue';
-import JobRunningModal from '@/pages/DataStudio/FooterContainer/JobRunningModal';
-import { getCurrentTab } from '@/pages/DataStudio/function';
-import { StateType, TabsPageType, VIEW } from '@/pages/DataStudio/model';
-import { getSseData } from '@/services/api';
-import { API_CONSTANTS } from '@/services/endpoints';
 import { l } from '@/utils/intl';
-import { connect } from '@@/exports';
+import { useModel } from '@@/exports';
 import { Button, GlobalToken, Space } from 'antd';
 import React, { useEffect, useState } from 'react';
-
-export type FooterContainerProps = {
-  token: GlobalToken;
-};
+import { WsData, Topic } from '@/models/UseWebSocketModel';
+import { DataStudioState } from '@/pages/DataStudio/model';
+import { formatDate } from '@/pages/DataStudio/FooterContainer/function';
 
 type ButtonRoute = {
   text: React.ReactNode;
   title: string;
   onClick?: () => void;
-  isShow?: (type?: TabsPageType, subType?: string, data?: any) => boolean;
 };
 
-const FooterContainer: React.FC<FooterContainerProps & StateType> = (props) => {
-  const {
-    footContainer: {
-      memDetails,
-      codeType,
-      lineSeparator,
-      codeEncoding,
-      space,
-      codePosition,
-      jobRunningMsg
-    },
-    token,
-    tabs
-  } = props;
-
-  const themeValue = useThemeValue();
-  const [viewJobRunning, setViewJobRunning] = useState(false);
-  const [memDetailInfo, setMemDetailInfo] = useState(memDetails);
-  const currentTab = getCurrentTab(tabs.panes ?? [], tabs.activeKey);
+export default (props: { token: GlobalToken; centerContent: DataStudioState['centerContent'] }) => {
+  const { token, centerContent } = props;
+  const [memDetailInfo, setMemDetailInfo] = useState('0/0M');
+  const { subscribeTopic } = useModel('UseWebSocketModel', (model: any) => ({
+    subscribeTopic: model.subscribeTopic
+  }));
 
   useEffect(() => {
-    const eventSource = getSseData(API_CONSTANTS.BASE_URL + API_CONSTANTS.GET_JVM_INFO);
-    eventSource.onmessage = (event) => {
-      const respData = JSON.parse(event.data);
-      const data = respData.data;
-      if (respData['topic'] != 'HEART_BEAT') {
-        setMemDetailInfo(
-          Number(data['heapUsed'] / 1024 / 1024).toFixed(0) +
-            '/' +
-            Number(data['max'] / 1024 / 1024).toFixed(0) +
-            'M'
-        );
-      }
-    };
-    return () => {
-      eventSource.close();
-    };
+    return subscribeTopic(Topic.JVM_INFO, null, (data: WsData) => {
+      const respData = data.data['none-params'];
+      setMemDetailInfo(
+        Number(respData['heapUsed'] / 1024 / 1024).toFixed(0) +
+          '/' +
+          Number(respData['max'] / 1024 / 1024).toFixed(0) +
+          'M'
+      );
+    });
   }, []);
-
   const route: ButtonRoute[] = [
     {
       text: (
@@ -99,36 +70,7 @@ const FooterContainer: React.FC<FooterContainerProps & StateType> = (props) => {
       title: l('pages.datastudio.footer.memDetails', '', {
         max: memDetailInfo.split('/')[1],
         used: memDetailInfo.split('/')[0]
-      }),
-      isShow: () => true
-    },
-    {
-      text: codeType,
-      title: l('pages.datastudio.footer.codeType') + codeType,
-      isShow: (type) => TabsPageType.project === type
-    },
-    {
-      text: lineSeparator,
-      title: l('pages.datastudio.footer.lineSeparator') + lineSeparator,
-      isShow: (type) => TabsPageType.project === type
-    },
-    {
-      text: codeEncoding,
-      title: l('pages.datastudio.footer.codeEncoding') + codeEncoding,
-      isShow: (type) => TabsPageType.project === type
-    },
-    {
-      text: 'Space: ' + space,
-      title: 'Space: ' + space,
-      isShow: (type) => TabsPageType.project === type
-    },
-    {
-      text: codePosition[0] + ':' + codePosition[1],
-      title: l('pages.datastudio.footer.codePosition', '', {
-        Ln: codePosition[0],
-        Col: codePosition[1]
-      }),
-      isShow: (type) => TabsPageType.project === type
+      })
     }
   ];
 
@@ -136,41 +78,45 @@ const FooterContainer: React.FC<FooterContainerProps & StateType> = (props) => {
    * render footer right info
    */
   const renderFooterRightInfo = (routes: ButtonRoute[]) => {
-    return routes
-      .filter((x) => {
-        if (x.isShow) {
-          return x.isShow(currentTab?.type, currentTab?.subType, currentTab?.params);
-        }
-        return false;
-      })
-      .map((item, index) => (
-        <Button
-          size={'small'}
-          type={'text'}
-          block
-          style={{ paddingInline: 4 }}
-          key={index}
-          onClick={item.onClick}
-          title={item.title}
-        >
-          {item.text}
-        </Button>
-      ));
+    return routes.map((item, index) => (
+      <Button
+        size={'small'}
+        type={'text'}
+        block
+        style={{ paddingInline: 4 }}
+        key={index}
+        onClick={item.onClick}
+        title={item.title}
+      >
+        {item.text}
+      </Button>
+    ));
+  };
+  const renderFooterLastUpdate = () => {
+    const currentTab = centerContent?.tabs.find((item) => item.id === centerContent?.activeTab);
+    if (currentTab && currentTab.tabType === 'task') {
+      return (
+        <div>
+          {l('pages.datastudio.label.lastUpdateDes')}: {formatDate(currentTab.params.updateTime)}
+        </div>
+      );
+    }
   };
 
   return (
     <>
       <div
         style={{
-          backgroundColor: themeValue.footerColor,
-          height: VIEW.footerHeight,
+          backgroundColor: 'var(--footer-bg-color)',
+          height: 25,
           width: '100%',
           display: 'flex',
           paddingInline: 10,
           position: 'fixed',
           bottom: 0,
           right: 0,
-          left: 0
+          left: 0,
+          justifyContent: 'space-between'
         }}
       >
         <Space style={{ direction: 'ltr', width: '30%%' }}>
@@ -178,24 +124,11 @@ const FooterContainer: React.FC<FooterContainerProps & StateType> = (props) => {
             Welcome to Dinky !
           </Button>
         </Space>
-        <Space onClick={() => setViewJobRunning(true)} style={{ direction: 'rtl', width: '30%' }}>
-          {jobRunningMsg.jobName} - {jobRunningMsg.runningLog}
-        </Space>
         <Space style={{ direction: 'rtl', width: '70%' }} size={4} direction={'horizontal'}>
           {renderFooterRightInfo(route)}
+          {renderFooterLastUpdate()}
         </Space>
       </div>
-      <JobRunningModal
-        value={jobRunningMsg}
-        //TODO 目前实现不了，禁掉
-        visible={false}
-        onCancel={() => setViewJobRunning(false)}
-        onOk={() => setViewJobRunning(false)}
-      />
     </>
   );
 };
-export default connect(({ Studio }: { Studio: StateType }) => ({
-  footContainer: Studio.footContainer,
-  tabs: Studio.tabs
-}))(FooterContainer);

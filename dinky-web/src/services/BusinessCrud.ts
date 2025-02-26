@@ -19,6 +19,7 @@
 
 import {
   addOrUpdateData,
+  download,
   getData,
   getDataByRequestBody,
   getInfoById,
@@ -222,6 +223,15 @@ export const handleOption = async (
   }
 };
 
+export const handleDownloadOption = async (url: string, title: string, param: any) => {
+  await LoadingMessageAsync(l('app.request.running') + title);
+  try {
+    await download(url, param);
+  } catch (error) {
+    WarningMessage(l('app.request.download.failed'));
+  }
+};
+
 export const handleGetOption = async (url: string, title: string, param: any) => {
   await LoadingMessageAsync(l('app.request.running') + title);
   try {
@@ -279,8 +289,8 @@ export const handlePutData = async (url: string, fields: any) => {
 };
 
 export const handlePutDataJson = async (url: string, fields: any) => {
-  const tipsTitle = fields?.id ? l('app.request.update') : l('app.request.add');
-  await LoadingMessageAsync(l('app.request.running') + tipsTitle);
+  // const tipsTitle = fields?.id ? l('app.request.update') : l('app.request.add');
+  // await LoadingMessageAsync(l('app.request.running') + tipsTitle);
   try {
     const { code, msg } = await putDataJson(url, { ...fields });
     if (code === RESPONSE_CODE.SUCCESS) {
